@@ -5,57 +5,132 @@ import numpy as np
 import mne
 #import matplotlib.pyplot as plt
 
+def get_event_id(epochs, tags):
+    return list(epochs['/'.join(tags)].event_id.values())
+
+def get_event_id_by_type(marker, type, perfect_match = True):
+    event_id = list()
+    for mrk in marker:
+        print(mrk)
+        if perfect_match:
+            if type ==  mrk[1]:
+                event_id.append(mrk[0])
+        else:
+            if type in mrk[1]:
+                event_id.append(mrk[0])
+    if len(event_id) == 0:
+        raise ValueError("Could not find event type '%s' in marker"%(type))
+    return event_id
+
+
+def split_raw_to_trial(raw, marker):
+
+    new_trial_marker = get_event_id_by_type(marker, 'new-trial', perfect_match=False)
+    target_marker = get_event_id_by_type(marker, 'target')
+
+    events, event_id = mne.events_from_annotations(raw)
+
+    t_interval = list()
+    for m in range(events.shape[0]):
+        if events[m,2] == new_trial_marker:
+            t_interval.append(events[m,0])
+
+    sfreq = raw.info['sfreq']
+    for idx, N in enumerate(t_interval):
+        t_interval[idx] = N/sfreq
+
+    t_interval.append(None)
+
+    number_of_trials = len(t_interval)-1
+    events = dict()
+    events['events'] = list()
+    events['event_id'] = list()
+
+    raw_intervals = list()
+    for m in range(number_of_trials):
+        raw_intervals.append(raw.copy())
+        raw_intervals[m].crop(tmin=t_interval[m], tmax=t_interval[m+1], include_tmax=False)
+        events_tmp, event_id_tmp = mne.events_from_annotations(raw_intervals[m])
+        events['events'].append(events_tmp.copy())
+        events['event_id'].append(event_id_tmp.copy())
+
+    target = list()
+    for idx, m in enumerate(events['events']):
+        e = np.unique(m[:,2])
+        t = set(e) & set(target_marker)
+        if len(t) > 1:
+            raise ValueError("WARNING : trial has more than 2 types of target event.")
+        target += list(t)
+
+    return raw_intervals, target
+
+def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, trial = None):
+    new_id = new_id_init
+    events, event_id = mne.events_from_annotations(raw)
+    new_event_id = dict()
+    for key in list(event_id): 
+        val = event_id[key]
+        event_type = None
+        event_desc = None
+        for mrk in marker:
+            if val == mrk[0]:
+                event_type = mrk[1]
+                event_desc = mrk[2]
+                break
+        if event_type is None or 'disable' in event_type.lower():
+            continue
+        tags = list()
+        tags.append("subject:%s"%subject_code)
+        tags.append("run:%d"%run)
+        tags.append("task:%s"%task)
+        tags.append("trial:%s"%(str(trial)))
+        tags.append("event:%s"%event_desc)
+        tags.append(event_type)
+        tags.append("marker:%s"%str(val))
+        tags = '/'.join(tags)
+        new_id += 1
+        new_event_id[tags] = new_id
+        events = mne.merge_events(events, [val], new_id)
+    epochs = mne.Epochs(raw = raw,
+                        events = events,
+                        event_id = new_event_id,
+                        tmin = tmin,
+                        tmax = tmax)
+    last_used_event_id = new_id
+    return epochs, last_used_event_id
+
+
 def export_epoch(data_dir,
                 eeg_files,
                 marker,
-                file_type="vhdr",
-                l_freq=0.1,
-                h_freq=12,
-                resample=None,
-                tmin=-0.2,
-                tmax=0.5,
-                subject_code='sub01'):
-    new_id = 2**16 # maximum id : 2147483647
+                file_type = "vhdr",
+                l_freq = 0.1,
+                h_freq = 12,
+                resample = None,
+                tmin = -0.2,
+                tmax = 0.5,
+                subject_code = 'sub01',
+                split_trial = False):
+    new_id_init = 2**16 # maximum id : 2147483647
     epochs = list()
     for idx, file in enumerate(eeg_files):
+        task = file[1]
+        run = idx + 1
         raw = mne.io.read_raw(os.path.join(data_dir, file[0]+".%s"%file_type),
                             preload=True)
         raw.filter(l_freq, h_freq)
         if resample is not None:
             raw.resample(sfreq=resample)
-        events, event_id = mne.events_from_annotations(raw)
-        new_event_id = dict()
-        for key in list(event_id): 
-            val = event_id[key]
-            event_type = None
-            event_desc = None
-            for mrk in marker:
-                if val == mrk[0]:
-                    event_type = mrk[1]
-                    event_desc = mrk[2]
-                    break
-            if event_type is None:
-                continue
-            tags = list()
-            tags.append("subject:%s"%subject_code)
-            tags.append("run:%s"%str(idx+1))
-            tags.append("task:%s"%file[1])
-            tags.append("trial:%s"%(None))
-            tags.append("event:%s"%event_desc)
-            tags.append(event_type)
-            tags.append("marker:%s"%str(val))
-            tags = '/'.join(tags)
-            new_id += 1
-            new_event_id[tags] = new_id
-            events = mne.merge_events(events, [val], new_id)
-        epochs.append(mne.Epochs(raw = raw,
-                                events = events,
-                                event_id = new_event_id,
-                                tmin = tmin,
-                                tmax = tmax))
-    epochs = mne.concatenate_epochs(epochs)
+        if split_trial:
+            raw_intervals, target = split_raw_to_trial(raw, marker)
+            for idx_trial, raw_interval in enumerate(raw_intervals):
+                _epochs, last_used_event_id = _epoch_from_raw(raw_interval, marker, new_id_init, tmin, tmax, subject_code, task, run, idx_trial+1)
+                new_id_init = last_used_event_id
+                epochs.append(_epochs)
+        else:
+            epochs.append(_epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, None))
+    epochs = mne.concatenate_epochs(epochs, add_offset=True) 
     return epochs
-
 
 def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None):
     """
