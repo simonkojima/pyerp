@@ -128,7 +128,10 @@ def export_epoch(data_dir,
                 new_id_init = last_used_event_id
                 epochs.append(_epochs)
         else:
-            epochs.append(_epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, None))
+            _epochs, last_used_event_id = _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, None)
+            new_id_init = last_used_event_id
+            #epochs.append(_epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, None))
+            epochs.append(_epochs)
     epochs = mne.concatenate_epochs(epochs, add_offset=True) 
     return epochs
 

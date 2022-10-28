@@ -43,7 +43,10 @@ def classify_binary(epochs,
 
     del target, nontarget
 
-    X = epochs['/'.join(tags)].copy()
+    if tags is not None:
+        X = epochs['/'.join(tags)].copy()
+    else:
+        X = epochs.copy()
     Y = X.events
     Y = mne.merge_events(Y, id_target, 10)
     Y = mne.merge_events(Y, id_nontarget, 1)
