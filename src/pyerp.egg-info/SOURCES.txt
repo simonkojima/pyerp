@@ -10,6 +10,7 @@ src/pyerp.egg-info/requires.txt
 src/pyerp.egg-info/top_level.txt
 src/pyerp/analysis/__init__.py
 src/pyerp/analysis/erp.py
+src/pyerp/analysis/raw.py
 src/pyerp/classification/__init__.py
 src/pyerp/classification/classification.py
 src/pyerp/classification/metrices.py

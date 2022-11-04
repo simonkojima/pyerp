@@ -110,14 +110,24 @@ def export_epoch(data_dir,
                 tmin = -0.2,
                 tmax = 0.5,
                 subject_code = 'sub01',
-                split_trial = False):
+                split_trial = False,
+                ica_enable = False,
+                ica_dir = None,
+                ica_type = 'eog'):
     new_id_init = 2**16 # maximum id : 2147483647
+    if ica_enable and ica_dir is None:
+        ica_dir = data_dir
+
     epochs = list()
     for idx, file in enumerate(eeg_files):
         task = file[1]
         run = idx + 1
         raw = mne.io.read_raw(os.path.join(data_dir, file[0]+".%s"%file_type),
                             preload=True)
+        if ica_enable:
+            ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
+            ica.apply(raw)
+
         raw.filter(l_freq, h_freq)
         if resample is not None:
             raw.resample(sfreq=resample)

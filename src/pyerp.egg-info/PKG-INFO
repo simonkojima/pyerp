@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: pyerp
-Version: 0.0.2
+Version: 0.0.3
 Summary: python library for Event-Related Potentials (ERPs) analysis
 Home-page: https://github.com/simonkojima/pyerp
 Author: Simon Kojima
