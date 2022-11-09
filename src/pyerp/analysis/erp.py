@@ -64,7 +64,7 @@ def split_raw_to_trial(raw, marker):
 
     return raw_intervals, target
 
-def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, trial = None):
+def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, trial = None):
     new_id = new_id_init
     events, event_id = mne.events_from_annotations(raw)
     new_event_id = dict()
@@ -95,7 +95,8 @@ def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, ru
                         events = events,
                         event_id = new_event_id,
                         tmin = tmin,
-                        tmax = tmax)
+                        tmax = tmax,
+                        baseline = baseline)
     last_used_event_id = new_id
     return epochs, last_used_event_id
 
@@ -109,6 +110,7 @@ def export_epoch(data_dir,
                 resample = None,
                 tmin = -0.2,
                 tmax = 0.5,
+                baseline = (None, 0),
                 subject_code = 'sub01',
                 split_trial = False,
                 ica_enable = False,
@@ -134,11 +136,11 @@ def export_epoch(data_dir,
         if split_trial:
             raw_intervals, target = split_raw_to_trial(raw, marker)
             for idx_trial, raw_interval in enumerate(raw_intervals):
-                _epochs, last_used_event_id = _epoch_from_raw(raw_interval, marker, new_id_init, tmin, tmax, subject_code, task, run, idx_trial+1)
+                _epochs, last_used_event_id = _epoch_from_raw(raw_interval, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, idx_trial+1)
                 new_id_init = last_used_event_id
                 epochs.append(_epochs)
         else:
-            _epochs, last_used_event_id = _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, None)
+            _epochs, last_used_event_id = _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, None)
             new_id_init = last_used_event_id
             #epochs.append(_epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, None))
             epochs.append(_epochs)

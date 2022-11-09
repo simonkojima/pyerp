@@ -38,8 +38,9 @@ def plot_tnt(epochs, picks = ['Cz'], tags=None, linewidth=2, sns=True):
         sns.set()
 
     times = epochs.times
+    figs = list()
     for ch in picks:
-        plt.figure()
+        figs.append(plt.figure())
         plt.title(ch)
         plt.plot(times,
                 np.squeeze(target_evoked.get_data(picks=[ch], units='uV')),
@@ -52,5 +53,4 @@ def plot_tnt(epochs, picks = ['Cz'], tags=None, linewidth=2, sns=True):
                 linewidth=linewidth,
                 label='nontarget')
         plot_erp_general(target.tmin, target.tmax)
-    plt.show()
-
+    return figs
