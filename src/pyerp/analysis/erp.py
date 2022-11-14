@@ -23,7 +23,7 @@ def get_event_id_by_type(marker, type, perfect_match = True):
     return event_id
 
 
-def split_raw_to_trial(raw, marker):
+def split_raw_to_trial_need_to_be_changed(raw, marker):
 
     new_trial_marker = get_event_id_by_type(marker, 'new-trial', perfect_match=False)
     target_marker = get_event_id_by_type(marker, 'target')
