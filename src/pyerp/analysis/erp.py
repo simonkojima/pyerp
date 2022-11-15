@@ -3,66 +3,9 @@ import os
 
 import numpy as np
 import mne
-#import matplotlib.pyplot as plt
 
-def get_event_id(epochs, tags):
-    return list(epochs['/'.join(tags)].event_id.values())
-
-def get_event_id_by_type(marker, type, perfect_match = True):
-    event_id = list()
-    for mrk in marker:
-        print(mrk)
-        if perfect_match:
-            if type ==  mrk[1]:
-                event_id.append(mrk[0])
-        else:
-            if type in mrk[1]:
-                event_id.append(mrk[0])
-    if len(event_id) == 0:
-        raise ValueError("Could not find event type '%s' in marker"%(type))
-    return event_id
-
-
-def split_raw_to_trial_need_to_be_changed(raw, marker):
-
-    new_trial_marker = get_event_id_by_type(marker, 'new-trial', perfect_match=False)
-    target_marker = get_event_id_by_type(marker, 'target')
-
-    events, event_id = mne.events_from_annotations(raw)
-
-    t_interval = list()
-    for m in range(events.shape[0]):
-        if events[m,2] == new_trial_marker:
-            t_interval.append(events[m,0])
-
-    sfreq = raw.info['sfreq']
-    for idx, N in enumerate(t_interval):
-        t_interval[idx] = N/sfreq
-
-    t_interval.append(None)
-
-    number_of_trials = len(t_interval)-1
-    events = dict()
-    events['events'] = list()
-    events['event_id'] = list()
-
-    raw_intervals = list()
-    for m in range(number_of_trials):
-        raw_intervals.append(raw.copy())
-        raw_intervals[m].crop(tmin=t_interval[m], tmax=t_interval[m+1], include_tmax=False)
-        events_tmp, event_id_tmp = mne.events_from_annotations(raw_intervals[m])
-        events['events'].append(events_tmp.copy())
-        events['event_id'].append(event_id_tmp.copy())
-
-    target = list()
-    for idx, m in enumerate(events['events']):
-        e = np.unique(m[:,2])
-        t = set(e) & set(target_marker)
-        if len(t) > 1:
-            raise ValueError("WARNING : trial has more than 2 types of target event.")
-        target += list(t)
-
-    return raw_intervals, target
+from ..utils.analysis import get_target_from_trial, get_event_id_by_type
+from .raw import split_raw_to_trial
 
 def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, trial = None):
     new_id = new_id_init
@@ -134,7 +77,10 @@ def export_epoch(data_dir,
         if resample is not None:
             raw.resample(sfreq=resample)
         if split_trial:
-            raw_intervals, target = split_raw_to_trial(raw, marker)
+            marker_new_trial = get_event_id_by_type(marker, 'new-trial')
+            raw_intervals = split_raw_to_trial(raw, marker_new_trial)
+
+            marker_target = get_event_id_by_type(marker, 'target')
             for idx_trial, raw_interval in enumerate(raw_intervals):
                 _epochs, last_used_event_id = _epoch_from_raw(raw_interval, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, idx_trial+1)
                 new_id_init = last_used_event_id
@@ -142,7 +88,6 @@ def export_epoch(data_dir,
         else:
             _epochs, last_used_event_id = _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, None)
             new_id_init = last_used_event_id
-            #epochs.append(_epoch_from_raw(raw, marker, new_id_init, tmin, tmax, subject_code, task, run, None))
             epochs.append(_epochs)
     epochs = mne.concatenate_epochs(epochs, add_offset=True) 
     return epochs

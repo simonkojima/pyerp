@@ -1,10 +1,7 @@
 from logging import getLogger
 import os
-try:
-    import pandas as pd
-except:
-    print("Warning: pandas is not installed")
 
+import pandas as pd
 
 def create_df_from_evoked(evoked, subject, event, units=None):
     import numpy as np
@@ -21,8 +18,6 @@ def create_df_from_evoked(evoked, subject, event, units=None):
         data['channel'] = [ch for m in range(N)]
         df.append(pd.DataFrame.from_dict(data))
     return pd.concat(df, ignore_index=True)
-    
-
         
 class quickSave(object):
     def __init__(self, file_dir):

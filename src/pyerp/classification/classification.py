@@ -1,10 +1,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 
-try:
-    from mne import BaseEpochs, concatenate_epochs, epochs    
-except:
-    print("Warning: mne is not installed")
+from mne import BaseEpochs, concatenate_epochs, epochs    
 
 def classify_binary(epochs,
                     clf,

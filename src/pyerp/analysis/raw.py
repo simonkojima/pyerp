@@ -5,12 +5,16 @@ import numpy as np
 import mne
 
 def split_raw_to_trial(raw, marker_new_trial):
+    """
+    
+    marker_new_trial : list
+    """
 
     events, event_id = mne.events_from_annotations(raw)
 
     t_interval = list()
     for m in range(events.shape[0]):
-        if events[m,2] == marker_new_trial:
+        if events[m,2] in marker_new_trial:
             t_interval.append(events[m,0])
 
     sfreq = raw.info['sfreq']
@@ -20,17 +24,11 @@ def split_raw_to_trial(raw, marker_new_trial):
     t_interval.append(None)
 
     number_of_trials = len(t_interval)-1
-    events = dict()
-    events['events'] = list()
-    events['event_id'] = list()
 
     raw_intervals = list()
     for m in range(number_of_trials):
         raw_intervals.append(raw.copy())
         raw_intervals[m].crop(tmin=t_interval[m], tmax=t_interval[m+1], include_tmax=False)
-        events_tmp, event_id_tmp = mne.events_from_annotations(raw_intervals[m])
-        events['events'].append(events_tmp.copy())
-        events['event_id'].append(event_id_tmp.copy())
 
     return raw_intervals
 

@@ -3,7 +3,9 @@ import matplotlib.pyplot as plt
 
 try:
     import seaborn as sns
+    enable_seaborn = True
 except:
+    enable_seaborn = False
     print("Warning: seaborn is not installed")
 
 def barplot(data, 
@@ -55,7 +57,8 @@ def barplot(data,
 
     x = np.arange(n_parents)
 
-    sns.set()
+    if enable_seaborn:
+        sns.set()
     fig, ax = plt.subplots()
     for idx, child in enumerate(children):
         ax.bar(x-(n_children*width/2)+(idx*width), data[:, idx], width, label=child, color=color[idx])

@@ -8,34 +8,49 @@ def plot_erp_general(tmin, tmax, fontsize = 12):
     plt.legend(fontsize=fontsize)
     plt.tick_params(labelsize=fontsize)
 
+def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], reject = None, tags = None, linewidth = 2, sns = True):
+    from ..utils.analysis import get_binary_epochs
+    X, _ = get_binary_epochs(epochs, tags)
+    if sns:
+        import seaborn as sns
+        sns.set()
+    times = epochs.times
+    fig = plt.figure()
+    colors = ['tab:orange', 'tab:blue']
+    N_t = X['target'].__len__()
+    N_nt = X['nontarget'] .__len__()
+    for idx, ch in enumerate(picks):
+        plt.plot(times,
+                np.squeeze(X['target'].average().get_data(picks=[ch], units='uV')),
+                color = colors[idx],
+                linestyle = '-',
+                linewidth = linewidth,
+                label="target(%s,N=%d)" %(ch, N_t))
+        plt.plot(times,
+                np.squeeze(X['nontarget'].average().get_data(picks=[ch], units='uV')),
+                color = colors[idx],
+                linestyle = '--',
+                linewidth = linewidth,
+                label = "nontarget(%s,N=%d)" %(ch, N_nt))
+    plot_erp_general(X.tmin, X.tmax)
+    return fig
+
 def plot_tnt(epochs, picks = ['Cz'], tags=None, linewidth=2, sns=True):
     """
     Parameters
     ==========
     tags : list of str, default = None, e.g. tags = ['event:stim1', 'task:count']
     """
-    if tags is not None:
-        tags_target = tags.copy()        
-        tags_target.append('target')
-
-        tags_nontarget = tags.copy()
-        tags_nontarget.append('nontarget')
-
-        tags_target = '/'.join(tags_target)
-        tags_nontarget = '/'.join(tags_nontarget)
-    else:
-        tags_target = 'target'
-        tags_nontarget = 'nontarget'
-
-    target = epochs[tags_target]
-    nontarget = epochs[tags_nontarget]
-
-    target_evoked = target.average()
-    nontarget_evoked = nontarget.average()
-
+    
+    from ..utils.analysis import get_binary_epochs
+    X, _ = get_binary_epochs(epochs, tags)
+    
     if sns:
         import seaborn as sns
         sns.set()
+
+    N_t = X['target'].__len__()
+    N_nt = X['nontarget'] .__len__()
 
     times = epochs.times
     figs = list()
@@ -43,14 +58,14 @@ def plot_tnt(epochs, picks = ['Cz'], tags=None, linewidth=2, sns=True):
         figs.append(plt.figure())
         plt.title(ch)
         plt.plot(times,
-                np.squeeze(target_evoked.get_data(picks=[ch], units='uV')),
+                np.squeeze(X['target'].average().get_data(picks=[ch], units='uV')),
                 color = 'tab:orange',
                 linewidth=linewidth,
-                label='target')
+                label='target(N=%d)'%N_t)
         plt.plot(times,
-                np.squeeze(nontarget_evoked.get_data(picks=[ch], units='uV')),
+                np.squeeze(X['nontarget'].average().get_data(picks=[ch], units='uV')),
                 color = 'tab:blue',
                 linewidth=linewidth,
-                label='nontarget')
-        plot_erp_general(target.tmin, target.tmax)
+                label='nontarget(N=%d)'%N_nt)
+        plot_erp_general(X.tmin, X.tmax)
     return figs

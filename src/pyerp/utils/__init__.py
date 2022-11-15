@@ -1,3 +1,4 @@
 from .mne import *
-from .pd import *
-from .common import *
+from . import pd
+from .std import *
+from .analysis import *
