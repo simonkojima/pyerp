@@ -20,12 +20,21 @@ def create_df_from_evoked(evoked, subject, event, units=None):
     return pd.concat(df, ignore_index=True)
         
 class quickSave(object):
-    def __init__(self, file_dir):
+    def __init__(self, file_dir, delete_if_exists = False):
         if ".pkl" in file_dir:
             self.file_dir = file_dir
         else:
             self.file_dir = file_dir + ".pkl"
         self.is_exists = os.path.exists(self.file_dir)
+        if self.is_exists and delete_if_exists:
+            os.remove(self.file_dir)
+            csv = self.file_dir[:-4] + ".csv"
+            if os.path.exists(csv):
+                os.remove(csv)
+            html = self.file_dir[:-4] + ".html"
+            if os.path.exists(html):
+                os.remove(html)
+            self.is_exists = False
         self.df = None
 
     def add(self, data, index = None, columns = None, html=False, csv=False):

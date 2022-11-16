@@ -1,21 +1,21 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-def plot_erp_general(tmin, tmax, fontsize = 12):
+def plot_erp_general(tmin, tmax, fontsize = 12, legend_loc = 'best'):
     plt.xlim(tmin, tmax)
     plt.xlabel("Time (s)", fontsize=fontsize)
     plt.ylabel('Potential ($\mu$V)', fontsize=fontsize)
-    plt.legend(fontsize=fontsize)
+    plt.legend(fontsize=fontsize, loc=legend_loc)
     plt.tick_params(labelsize=fontsize)
 
-def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], reject = None, tags = None, linewidth = 2, sns = True):
+def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], reject = None, tags = None, figsize = [6.4, 4.8], linewidth = 2, legend_loc = 'best', sns = True):
     from ..utils.analysis import get_binary_epochs
     X, _ = get_binary_epochs(epochs, tags)
     if sns:
         import seaborn as sns
         sns.set()
     times = epochs.times
-    fig = plt.figure()
+    fig = plt.figure(figsize=figsize)
     colors = ['tab:orange', 'tab:blue']
     N_t = X['target'].__len__()
     N_nt = X['nontarget'] .__len__()
@@ -32,10 +32,10 @@ def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], reject = None, tags = None, linew
                 linestyle = '--',
                 linewidth = linewidth,
                 label = "nontarget(%s,N=%d)" %(ch, N_nt))
-    plot_erp_general(X.tmin, X.tmax)
+    plot_erp_general(X.tmin, X.tmax, legend_loc=legend_loc)
     return fig
 
-def plot_tnt(epochs, picks = ['Cz'], tags=None, linewidth=2, sns=True):
+def plot_tnt(epochs, picks = ['Cz'], tags=None, figsize = [6.4, 4.8], linewidth=2, legend_loc = 'best', sns=True):
     """
     Parameters
     ==========
@@ -55,7 +55,7 @@ def plot_tnt(epochs, picks = ['Cz'], tags=None, linewidth=2, sns=True):
     times = epochs.times
     figs = list()
     for ch in picks:
-        figs.append(plt.figure())
+        figs.append(plt.figure(figsize=figsize))
         plt.title(ch)
         plt.plot(times,
                 np.squeeze(X['target'].average().get_data(picks=[ch], units='uV')),
@@ -67,5 +67,5 @@ def plot_tnt(epochs, picks = ['Cz'], tags=None, linewidth=2, sns=True):
                 color = 'tab:blue',
                 linewidth=linewidth,
                 label='nontarget(N=%d)'%N_nt)
-        plot_erp_general(X.tmin, X.tmax)
+        plot_erp_general(X.tmin, X.tmax, legend_loc=legend_loc)
     return figs

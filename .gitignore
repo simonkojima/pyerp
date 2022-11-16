@@ -1,7 +1,7 @@
 build/
 dist/
-pyscab.egg-info/
-__pychace__
+pyerp.egg-info/
+__pycache__
 _build
 _static
 _templates

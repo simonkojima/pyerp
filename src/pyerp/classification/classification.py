@@ -16,67 +16,43 @@ def classify_binary(epochs,
     """
     Parameters
     ==========
-    tags : list of str, default = None, e.g. tags = ['event:stim1', 'task:count']
     """
-    import mne
-    if tags is not None:
-        tags_target = tags.copy()        
-        tags_target.append('target')
-
-        tags_nontarget = tags.copy()
-        tags_nontarget.append('nontarget')
-
-        tags_target = '/'.join(tags_target)
-        tags_nontarget = '/'.join(tags_nontarget)
-    else:
-        tags_target = 'target'
-        tags_nontarget = 'nontarget'
-
-    target = epochs[tags_target]
-    nontarget = epochs[tags_nontarget]
-
-    id_target = list(target.event_id.values())
-    id_nontarget = list(nontarget.event_id.values())
-
-    del target, nontarget
-
-    if tags is not None:
-        X = epochs['/'.join(tags)].copy()
-    else:
-        X = epochs.copy()
-    Y = X.events
-    Y = mne.merge_events(Y, id_target, 10)
-    Y = mne.merge_events(Y, id_nontarget, 1)
-    Y = Y[:, -1]
-    
-    import pyerp
-    vectorizer = pyerp.EpochsVectorizer(jumping_mean_ivals=ivals, sfreq = X.info['sfreq'], t_ref = X.times[0])
-    X = vectorizer.transform(X)
+    from ..utils.analysis import get_binary_epochs
+    from sklearn.model_selection import cross_val_score, permutation_test_score
 
     r = dict()
-    if not perm:
-        from sklearn.model_selection import cross_val_score
-        scores = cross_val_score(estimator = clf,
-                                X = X,
-                                y = Y,
-                                scoring = scoring,
-                                cv = cv,
-                                n_jobs = n_jobs,
-                                verbose = verbose)
-        r['scores'] = scores
-    else:
-        from sklearn.model_selection import permutation_test_score
-        score, permutation_scores, pvalue = permutation_test_score(estimator = clf,
-                                                                X = X,
-                                                                y = Y,
-                                                                cv = cv,
-                                                                n_permutations = n_perm,
-                                                                n_jobs = n_jobs,
-                                                                verbose = verbose,
-                                                                scoring = scoring)
-        r['score'] = score
-        r['permutation_scores'] = permutation_scores
-        r['pvalue'] = pvalue
+    r['n_channels'] = len(epochs.ch_names)
+
+    X, Y = get_binary_epochs(epochs, tags) 
+    
+    vectorizer = EpochsVectorizer(jumping_mean_ivals=ivals, sfreq = X.info['sfreq'], t_ref = X.times[0])
+    X = vectorizer.transform(X)
+
+    r['n_features'] = X.shape[1]
+    r['n_samples'] = dict()
+
+    for y in np.unique(Y):
+        r['n_samples'][str(y)] = np.count_nonzero(Y == y)
+
+    scores = cross_val_score(estimator = clf,
+                            X = X,
+                            y = Y,
+                            scoring = scoring,
+                            cv = cv,
+                            n_jobs = n_jobs,
+                            verbose = verbose)
+    r['scores'] = scores
+    score, permutation_scores, pvalue = permutation_test_score(estimator = clf,
+                                                            X = X,
+                                                            y = Y,
+                                                            cv = cv,
+                                                            n_permutations = n_perm,
+                                                            n_jobs = n_jobs,
+                                                            verbose = verbose,
+                                                            scoring = scoring)
+    r['score'] = score
+    r['permutation_scores'] = permutation_scores
+    r['pvalue'] = pvalue
 
     return r
 
