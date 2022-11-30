@@ -7,6 +7,47 @@ import mne
 from ..utils.analysis import get_target_from_trial, get_event_id_by_type
 from .raw import split_raw_to_trial
 
+def get_min_max(epochs, tags = None, average = False, picks = None, units = None, tmin = None, tmax = None):
+    from ..utils.analysis import process_tags
+
+    tags_processed = process_tags(tags)
+    X = epochs[tags_processed].copy()
+    if average:
+        X = X.average()
+    data = X.get_data(picks=picks, units=units, tmin=tmin, tmax=tmax)
+    data = np.ravel(data)
+    max = np.max(data)
+    min = np.min(data)
+
+    return min, max
+
+def get_min_max_tnt(epochs, tags = None, picks = None, units = None, tmin = None, tmax = None):
+    from ..utils.analysis import get_tags_binary
+    
+    tags_target, tags_nontarget = get_tags_binary(tags) 
+
+    min_target, max_target = get_min_max(epochs, picks=picks, tags=tags_target, average=True, units=units, tmin=tmin, tmax=tmax)
+    min_nontarget, max_nontarget = get_min_max(epochs, picks=picks, tags=tags_nontarget, average=True, units=units, tmin=tmin, tmax=tmax)
+
+    max = np.max([max_target, max_nontarget])
+    min = np.min([min_target, min_nontarget])
+
+    return min, max
+
+def get_min_max_tnt_task(epochs, tasks, picks = None, units = None, tmin = None, tmax = None):
+    min = list()
+    max = list()
+
+    for task in tasks:
+       tmp_min, tmp_max = get_min_max_tnt(epochs, tags = [task], picks = picks, units = units, tmin=tmin, tmax=tmax) 
+       min.append(tmp_min)
+       max.append(tmp_max)
+
+    min = np.min(min)
+    max = np.max(max)
+
+    return min, max
+
 def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, trial = None):
     new_id = new_id_init
     events, event_id = mne.events_from_annotations(raw)
@@ -274,8 +315,8 @@ def r_value(x1, x2):
     
     X = np.append(x1, x2, axis=0)
 
-    r = np.mean(x1 ,axis=0) + np.mean(x2, axis=0)
-    r = r / np.std(X, axis=0)
+    r = np.mean(x1 ,axis=0) - np.mean(x2, axis=0)
+    r = r / np.std(X, axis=0, ddof = 1)
     r = r * (np.sqrt(N1*N2)/(N1+N2))
 
     return r

@@ -88,8 +88,8 @@ def get_tags_binary(tags):
             tmp = tags.copy()
             tmp.append('nontarget')
             tags_nontarget = tmp
-        tags_target = process_tags(tags_target)
-        tags_nontarget = process_tags(tags_nontarget)
+        #tags_target = process_tags(tags_target)
+        #tags_nontarget = process_tags(tags_nontarget)
     else:
         tags_target = 'target'
         tags_nontarget = 'nontarget'
@@ -103,7 +103,10 @@ def process_tags(tags):
         for tag in tags:
             processed_tags.append('/'.join(tag))
     else:
-        processed_tags = '/'.join(tags)
+        if type(tags) == list:
+            processed_tags = '/'.join(tags)
+        else:
+            processed_tags = tags
     return processed_tags
 
 
@@ -115,6 +118,9 @@ def get_binary_epochs(epochs, tags=None):
     """
 
     tags_target, tags_nontarget = get_tags_binary(tags)
+
+    tags_target = process_tags(tags_target)
+    tags_nontarget = process_tags(tags_nontarget)
 
     id_target = list(epochs[tags_target].event_id.values())
     id_nontarget = list(epochs[tags_nontarget].event_id.values())

@@ -24,3 +24,6 @@ marker.append([115, "target", "word5"])
 marker.append([116, "target", "word6"])
 marker.append([210, "new-trial"])
 ```
+
+# Requirments
+mne version should be greater than 1.2
