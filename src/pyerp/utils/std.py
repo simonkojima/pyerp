@@ -35,6 +35,10 @@ def input_binary(message, default = None, suffix = True):
             elif default == None:
                 pass
 
+def print_list(data):
+    for line in data:
+        print(line)
+
 def sort_list(data):
     return sorted(data, key=natural_keys)
 
