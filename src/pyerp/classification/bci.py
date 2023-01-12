@@ -6,6 +6,9 @@ def bci_simulation(epochs,
                    dynamic_stopping_min_stimulus = 5,
                    dynamic_stopping_mode = 'best-rest',
                    dynamic_stopping_p_value = 0.05, 
+                   dynamic_stopping_alternative = 'two-sided',
+                   adaptation = False,
+                   clf_adaptation = None,
                    soa = None,
                    reject = None):
     from scipy import stats
@@ -85,6 +88,13 @@ def bci_simulation(epochs,
                 event = get_val_in_tag(tag, 'event')
 
                 X = vectorizer.transform(epochs_trial[idx_epoch])
+                
+                if adaptation:
+                    if target == event:
+                        y = np.array([1])
+                    else:
+                        y = np.array([0])
+                    clf_adaptation.adaptation(X, y)
 
                 distance = clf.decision_function(X)
                 distances[event].append(distance)
@@ -110,7 +120,7 @@ def bci_simulation(epochs,
                         best = np.array(best)
                         rest = np.concatenate(rest)
 
-                        t_score, p = stats.ttest_ind(best, rest, equal_var = False)
+                        t_score, p = stats.ttest_ind(best, rest, equal_var = False, alternative = dynamic_stopping_alternative)
 
                         if p <= dynamic_stopping_p_value:
                             preds_dynamic_stopping.append(best_event)
@@ -120,6 +130,26 @@ def bci_simulation(epochs,
                             
                     elif dynamic_stopping_mode == 'best-second':
                         pass
+                    elif dynamic_stopping_mode == 'target-bestnontarget':
+                        target_distance = distances[target]
+                        
+                        distances_nontarget = distances.copy()
+                        distances_nontarget.pop(target)
+
+                        v = list(distances_mean.values())
+                        k = list(distances.keys())
+                        bestnontarget_event = k[v.index(max(v))]
+                        
+                        bestnontarget_distance = distances[bestnontarget_event]
+
+                        t_score, p = stats.ttest_ind(target_distance, bestnontarget_distance, equal_var = False, alternative = dynamic_stopping_alternative)
+                        
+                        if p <= dynamic_stopping_p_value:
+                            preds_dynamic_stopping.append(target)
+                            pvalue.append(p)
+                            n_stimulus.append(idx_epoch+1)
+                            dynamic_stopping_triggered = True
+
                     else:
                         raise ValueError("Unknown dynamic stopping mode : %s" %dynamic_stopping_mode)
 
@@ -127,8 +157,9 @@ def bci_simulation(epochs,
                         preds_dynamic_stopping.append(best_event)
                         pvalue.append(p)
                         n_stimulus.append(idx_epoch+1)
-
-
+                        
+            if adaptation:
+                clf_adaptation.apply_adaptation()
 
             # normal bci simulation (without dynamic stopping)        
             for event in events_in_trial:
