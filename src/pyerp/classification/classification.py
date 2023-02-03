@@ -8,7 +8,7 @@ def classify_binary(epochs,
                     ivals,
                     tags=None,
                     cv = 3,
-                    perm = False,
+                    perm = True,
                     n_perm = 100,
                     scoring = 'balanced_accuracy',
                     n_jobs = None,
@@ -42,17 +42,25 @@ def classify_binary(epochs,
                             n_jobs = n_jobs,
                             verbose = verbose)
     r['scores'] = scores
-    score, permutation_scores, pvalue = permutation_test_score(estimator = clf,
-                                                            X = X,
-                                                            y = Y,
-                                                            cv = cv,
-                                                            n_permutations = n_perm,
-                                                            n_jobs = n_jobs,
-                                                            verbose = verbose,
-                                                            scoring = scoring)
-    r['score'] = score
-    r['permutation_scores'] = permutation_scores
-    r['pvalue'] = pvalue
+    if perm:
+        score, permutation_scores, pvalue = permutation_test_score(estimator = clf,
+                                                                X = X,
+                                                                y = Y,
+                                                                cv = cv,
+                                                                n_permutations = n_perm,
+                                                                n_jobs = n_jobs,
+                                                                verbose = verbose,
+                                                                scoring = scoring)
+        r['score'] = score
+        r['permutation_scores'] = permutation_scores
+        r['pvalue'] = pvalue
+        r['n_permutations'] = n_perm
+    r['cv'] = cv
+    r['scoring'] = scoring
+    try:
+        r['estimator'] = str(clf)
+    except:
+        r['could not be parsed.']
 
     return r
 
