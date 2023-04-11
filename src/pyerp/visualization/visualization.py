@@ -19,6 +19,7 @@ def barplot(data,
             xlabel=None,
             title=None,
             suptitle=None,
+            show=True,
             fname=None):
     """
     Parameters
@@ -80,4 +81,7 @@ def barplot(data,
     if fname is not None:
         plt.savefig(fname)
 
-    plt.show()
+    if show:
+        plt.show()
+    
+    return fig

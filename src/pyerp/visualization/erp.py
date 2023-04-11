@@ -62,8 +62,11 @@ def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsi
         plt.ylim(vlim[0], vlim[1])
     plt.ylabel('Potential ($\mu$V)', fontsize=12)
     handles, labels = plt.gca().get_legend_handles_labels()
-    order = make_label_last(labels, 'baseline')
-    legend_in_order(handles, labels, order, fontsize=12, loc=legend_loc)
+    if baseline is not None:
+        order = make_label_last(labels, 'baseline')
+        legend_in_order(handles, labels, order, fontsize=12, loc=legend_loc)
+    else:
+        plt.legend(loc=legend_loc, fontsize=12)
     plt.tick_params(labelsize=12)
 
     return fig
