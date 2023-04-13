@@ -32,6 +32,7 @@ def split_raw_to_trial(raw, marker_new_trial):
 
     return raw_intervals
 
+
 def ica_eog_removal(raw,
                 l_freq = 1.0,
                 h_freq = None,

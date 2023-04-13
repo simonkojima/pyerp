@@ -89,8 +89,8 @@ def export_epoch(data_dir,
                 eeg_files,
                 marker,
                 file_type = "vhdr",
-                l_freq = 0.1,
-                h_freq = 12,
+                freq = [1, 15],
+                filter = None,
                 resample = None,
                 tmin = -0.2,
                 tmax = 0.5,
@@ -114,7 +114,13 @@ def export_epoch(data_dir,
             ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
             ica.apply(raw)
 
-        raw.filter(l_freq, h_freq)
+        if freq is not None:
+            if filter is None:
+                raw.filter(freq[0], freq[1], phase='minimum')
+            else:
+                from .signal import apply_filter
+                raw.apply_function(apply_filter, sos = filter, zero_phase = False, channel_wise = True, n_jobs = -1)
+
         if resample is not None:
             raw.resample(sfreq=resample)
         if split_trial:

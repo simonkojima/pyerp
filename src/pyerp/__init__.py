@@ -1,5 +1,6 @@
 from .analysis.erp import *
 from .analysis.raw import *
+from .analysis.signal import *
 
 from .classification.classification import *
 from .classification.metrices import *
