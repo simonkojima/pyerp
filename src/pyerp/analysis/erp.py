@@ -91,6 +91,7 @@ def export_epoch(data_dir,
                 file_type = "vhdr",
                 freq = [1, 15],
                 filter = None,
+                zero_phase = True,
                 resample = None,
                 tmin = -0.2,
                 tmax = 0.5,
@@ -117,9 +118,12 @@ def export_epoch(data_dir,
         if freq is not None:
             if filter is None:
                 raw.filter(freq[0], freq[1], phase='minimum')
-            else:
+            elif filter[0] is 'sos':
+                from .signal import apply_sosfilter
+                raw.apply_function(apply_sosfilter, sos = filter[1], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
+            elif filter[0] is 'ba':
                 from .signal import apply_filter
-                raw.apply_function(apply_filter, sos = filter, zero_phase = False, channel_wise = True, n_jobs = -1)
+                raw.apply_function(apply_filter, b = filter[1]['b'], a = filter[1]['a'], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
 
         if resample is not None:
             raw.resample(sfreq=resample)
