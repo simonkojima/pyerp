@@ -63,7 +63,7 @@ def plot_freqz(sos=None, b=None, a=None, fs = None, xlim = None, show = True):
         plt.show()
     return fig
 
-def plot_response(sos = None, b = None, a = None, length = 1000, fs = None, xlim = None, show = True):
+def plot_response(sos = None, b = None, a = None, length = 1000, fs = None, xlim = None, ylim = None, show = True):
     
     # impulse response
     imp = scipy.signal.unit_impulse(length, 'mid')
@@ -111,10 +111,35 @@ def plot_response(sos = None, b = None, a = None, length = 1000, fs = None, xlim
 
     
     if xlim is not None:
-        for m in range(1, 5):
-            plt.subplot(2,2,m)
-            plt.xlim(xlim)
-    
+        if type(xlim[0]) == list:
+            plt.subplot(2,2,1)
+            plt.xlim(xlim[0])
+            plt.subplot(2,2,2)
+            plt.xlim(xlim[0])
+            plt.subplot(2,2,3)
+            plt.xlim(xlim[1])
+            plt.subplot(2,2,4)
+            plt.xlim(xlim[1])
+        else:
+            for m in range(1, 5):
+                plt.subplot(2,2,m)
+                plt.xlim(xlim)
+
+    if ylim is not None:
+        if type(ylim[0]) == list:
+            plt.subplot(2,2,1)
+            plt.ylim(ylim[0])
+            plt.subplot(2,2,2)
+            plt.ylim(ylim[0])
+            plt.subplot(2,2,3)
+            plt.ylim(ylim[1])
+            plt.subplot(2,2,4)
+            plt.ylim(ylim[1])
+        else:
+            for m in range(1,5):
+                plt.subplot(2,2,m)
+                plt.ylim(ylim)
+
     plt.subplot(2,2,3)
     if fs is None:
         plt.xlabel('Sample')

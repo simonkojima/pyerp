@@ -116,8 +116,8 @@ def export_epoch(data_dir,
             ica.apply(raw)
 
         if freq is not None:
-            if filter is None:
-                raw.filter(freq[0], freq[1], phase='minimum')
+            if filter[0] is 'mne':
+                raw.filter(freq[0], freq[1], phase=filter[1])
             elif filter[0] is 'sos':
                 from .signal import apply_sosfilter
                 raw.apply_function(apply_sosfilter, sos = filter[1], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
