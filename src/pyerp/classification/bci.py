@@ -28,6 +28,7 @@ def bci_simulation(epochs,
     scores['score'] = list()
     scores['itr'] = list()
     scores['n_channels'] = list()
+    scores['distances'] = list()
 
     scores_dynamic_stopping = dict()
     scores_dynamic_stopping['labels'] = list()
@@ -37,6 +38,7 @@ def bci_simulation(epochs,
     scores_dynamic_stopping['n_stimulus'] = list()
     scores_dynamic_stopping['itr'] = list()
     scores_dynamic_stopping['n_channels'] = list()
+    scores_dynamic_stopping['distances'] = list()
 
     for cv_idx, train in enumerate(cv['train']):
         test = cv['test'][cv_idx]
@@ -176,6 +178,7 @@ def bci_simulation(epochs,
         req_time = req_time / 60
         scores['itr'].append(calc_itr(6, accuracy_score(labels, preds), req_time))
         scores['n_channels'].append(len(epochs_trial.ch_names))
+        scores['distances'].append(distances)
 
         scores_dynamic_stopping['labels'].append(labels)
         scores_dynamic_stopping['preds'].append(preds_dynamic_stopping)
@@ -188,6 +191,7 @@ def bci_simulation(epochs,
         req_time = np.mean(n_stimulus)*soa + (epochs.tmax - soa)
         req_time = req_time / 60
         scores_dynamic_stopping['itr'].append(calc_itr(len(events_in_trial), accuracy_score(labels, preds_dynamic_stopping), req_time))
+        scores_dynamic_stopping['distances'].append(distances)
 
     r = dict()
     r['normal'] = scores
