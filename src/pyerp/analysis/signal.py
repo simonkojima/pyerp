@@ -140,6 +140,12 @@ def plot_response(sos = None, b = None, a = None, length = 1000, fs = None, xlim
                 plt.subplot(2,2,m)
                 plt.ylim(ylim)
 
+    plt.subplot(2,2,1)
+    plt.title("one pass")
+
+    plt.subplot(2,2,2)
+    plt.title("forward backward")
+
     plt.subplot(2,2,3)
     if fs is None:
         plt.xlabel('Sample')
