@@ -10,13 +10,15 @@ except:
 
 def barplot(data, 
             err=None,
-            avg=True,
+            avg_parents=True,
+            avg_children=True,
             parents=None,
             children=None,
             color=None,
             width=None,
             ylabel=None,
             xlabel=None,
+            ylim = None,
             title=None,
             suptitle=None,
             show=True,
@@ -39,14 +41,16 @@ def barplot(data,
     if children is None:
         children = [str(i) for i in range(1, n_children+1)]        
     
-    if avg:
-        data = np.hstack((data, np.mean(data, axis=1, keepdims=True)))
+    if avg_parents:
         data = np.vstack((data, np.mean(data, axis=0, keepdims=True)))
         n_parents += 1
-        n_children += 1
         parents = parents.copy()
-        children = children.copy()
         parents.append('avg')
+        
+    if avg_children:
+        data = np.hstack((data, np.mean(data, axis=1, keepdims=True)))
+        n_children += 1
+        children = children.copy()
         children.append('avg')
 
     if color is None:
@@ -71,6 +75,8 @@ def barplot(data,
         ax.set_ylabel(ylabel)
     if xlabel is not None:
         ax.set_xlabel(xlabel)
+    if ylim is not None:
+        plt.ylim(ylim)
     #ax.set_xlabel('Subject', fontsize=18)
     ax.set_xticks(x, parents)
     #ax.legend(children, fontsize=12)
