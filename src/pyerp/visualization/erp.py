@@ -31,7 +31,7 @@ def make_label_last(labels, label_last):
 def legend_in_order(handles, labels, order, loc='best', fontsize='medium'):
     plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order], loc=loc, fontsize=fontsize)
 
-def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsize = [6.4, 4.8], linewidth = 2, legend_loc = 'best', sns = True):
+def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, legend_loc = 'best', sns = True):
     if sns:
         import seaborn as sns
         sns.set()
@@ -60,14 +60,15 @@ def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsi
     plt.xlim(target.tmin, target.tmax)
     if vlim is not None:
         plt.ylim(vlim[0], vlim[1])
-    plt.ylabel('Potential ($\mu$V)', fontsize=12)
+    plt.ylabel('Potential ($\mu$V)', fontsize=fontsize)
+    plt.xlabel('Time (sec)', fontsize=fontsize)
     handles, labels = plt.gca().get_legend_handles_labels()
     if baseline is not None:
         order = make_label_last(labels, 'baseline')
-        legend_in_order(handles, labels, order, fontsize=12, loc=legend_loc)
+        legend_in_order(handles, labels, order, fontsize=fontsize, loc=legend_loc)
     else:
-        plt.legend(loc=legend_loc, fontsize=12)
-    plt.tick_params(labelsize=12)
+        plt.legend(loc=legend_loc, fontsize=fontsize)
+    plt.tick_params(labelsize=fontsize)
 
     return fig
 
