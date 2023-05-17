@@ -115,9 +115,9 @@ def plot_response(sos = None, b = None, a = None, length = 1000, fs = None, xlim
             plt.subplot(2,2,1)
             plt.xlim(xlim[0])
             plt.subplot(2,2,2)
-            plt.xlim(xlim[0])
-            plt.subplot(2,2,3)
             plt.xlim(xlim[1])
+            plt.subplot(2,2,3)
+            plt.xlim(xlim[0])
             plt.subplot(2,2,4)
             plt.xlim(xlim[1])
         else:
