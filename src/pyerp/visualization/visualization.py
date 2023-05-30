@@ -22,6 +22,7 @@ def barplot(data,
             title=None,
             suptitle=None,
             show=True,
+            space_before_avg = False,
             fname=None):
     """
     Parameters
@@ -42,6 +43,11 @@ def barplot(data,
         children = [str(i) for i in range(1, n_children+1)]        
     
     if avg_parents:
+        if space_before_avg:
+            data = np.vstack((data, np.zeros((1, n_children))))
+            n_parents += 1
+            parents = parents.copy()
+            parents.append('')
         data = np.vstack((data, np.mean(data, axis=0, keepdims=True)))
         n_parents += 1
         parents = parents.copy()
