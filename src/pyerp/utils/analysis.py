@@ -55,8 +55,12 @@ def get_n_runs_in_task(epochs, task):
 def get_run_list_in_task(epochs, task):
     tags = list(epochs.event_id.keys())
     run_list = list()
+    if task.startswith('task:'):
+        keyword = task
+    else:
+        keyword = 'task:%s'%task
     for tag in tags:
-        if 'task:%s'%task in tag.split('/'):
+        if keyword in tag.split('/'):
             run_list.append(int(get_val_in_tag(tag, 'run')))
     run_list = np.unique(run_list)
     return run_list

@@ -180,21 +180,23 @@ def bci_simulation(epochs,
         scores['n_channels'].append(len(epochs_trial.ch_names))
         scores['distances'].append(distances)
 
-        scores_dynamic_stopping['labels'].append(labels)
-        scores_dynamic_stopping['preds'].append(preds_dynamic_stopping)
-        #print(labels)
-        #print(preds_dynamic_stopping)
-        scores_dynamic_stopping['score'].append(accuracy_score(labels, preds_dynamic_stopping))
-        scores_dynamic_stopping['pvalue'].append(pvalue)
-        scores_dynamic_stopping['n_stimulus'].append(n_stimulus)
-        scores_dynamic_stopping['n_channels'].append(len(epochs_trial.ch_names))
-        req_time = np.mean(n_stimulus)*soa + (epochs.tmax - soa)
-        req_time = req_time / 60
-        scores_dynamic_stopping['itr'].append(calc_itr(len(events_in_trial), accuracy_score(labels, preds_dynamic_stopping), req_time))
-        scores_dynamic_stopping['distances'].append(distances)
+        if enable_dynamic_stopping:
+            scores_dynamic_stopping['labels'].append(labels)
+            scores_dynamic_stopping['preds'].append(preds_dynamic_stopping)
+            #print(labels)
+            #print(preds_dynamic_stopping)
+            scores_dynamic_stopping['score'].append(accuracy_score(labels, preds_dynamic_stopping))
+            scores_dynamic_stopping['pvalue'].append(pvalue)
+            scores_dynamic_stopping['n_stimulus'].append(n_stimulus)
+            scores_dynamic_stopping['n_channels'].append(len(epochs_trial.ch_names))
+            req_time = np.mean(n_stimulus)*soa + (epochs.tmax - soa)
+            req_time = req_time / 60
+            scores_dynamic_stopping['itr'].append(calc_itr(len(events_in_trial), accuracy_score(labels, preds_dynamic_stopping), req_time))
+            scores_dynamic_stopping['distances'].append(distances)
 
     r = dict()
     r['normal'] = scores
-    r['dynamic_stopping'] = scores_dynamic_stopping
+    if enable_dynamic_stopping:
+        r['dynamic_stopping'] = scores_dynamic_stopping
 
     return r 
