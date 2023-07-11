@@ -89,7 +89,6 @@ def export_epoch(data_dir,
                 eeg_files,
                 marker,
                 file_type = "vhdr",
-                freq = [1, 15],
                 filter = None,
                 zero_phase = True,
                 resample = None,
@@ -115,13 +114,13 @@ def export_epoch(data_dir,
             ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
             ica.apply(raw)
 
-        if freq is not None:
-            if filter[0] is 'mne':
-                raw.filter(freq[0], freq[1], phase=filter[1])
-            elif filter[0] is 'sos':
+        if filter is not None:
+            if filter[0] == 'mne':
+                raw.filter(filter[2][0], filter[2][1], phase=filter[1])
+            elif filter[0] == 'sos':
                 from .signal import apply_sosfilter
                 raw.apply_function(apply_sosfilter, sos = filter[1], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
-            elif filter[0] is 'ba':
+            elif filter[0] == 'ba':
                 from .signal import apply_filter
                 raw.apply_function(apply_filter, b = filter[1]['b'], a = filter[1]['a'], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
 

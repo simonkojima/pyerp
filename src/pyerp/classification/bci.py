@@ -2,6 +2,7 @@ def bci_simulation(epochs,
                    task,
                    vectorizer,
                    clf,
+                   epochs_filter_train = None,
                    enable_dynamic_stopping = True,
                    dynamic_stopping_min_stimulus = 5,
                    dynamic_stopping_mode = 'best-rest',
@@ -45,7 +46,14 @@ def bci_simulation(epochs,
         tags_test = list()
         for train_run in train:
             tags_test.append(['run:%d'%train_run])
-        X, Y = get_binary_epochs(epochs, tags_test)
+
+        if epochs_filter_train is not None:
+            X, Y = get_binary_epochs(epochs[epochs_filter_train], tags_test)
+        else:
+            X, Y = get_binary_epochs(epochs, tags_test)
+        
+        #if epochs_filter_train is not None:
+        #    X = X[epochs_filter_train]
         
         if reject is not None:
             X.drop_bad(reject=reject)
