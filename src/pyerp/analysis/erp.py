@@ -99,7 +99,9 @@ def export_epoch(data_dir,
                 split_trial = False,
                 ica_enable = False,
                 ica_dir = None,
-                ica_type = 'eog'):
+                ica_type = 'eog',
+                apply_function = None,
+                **kwargs):
     new_id_init = 2**16 # maximum id : 2147483647
     if ica_enable and ica_dir is None:
         ica_dir = data_dir
@@ -113,6 +115,9 @@ def export_epoch(data_dir,
         if ica_enable:
             ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
             ica.apply(raw)
+            
+        if apply_function is not None:
+            raw = apply_function(raw=raw, **kwargs)
 
         if filter is not None:
             if filter[0] == 'mne':
