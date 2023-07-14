@@ -129,8 +129,6 @@ def export_epoch(data_dir,
                 from .signal import apply_filter
                 raw.apply_function(apply_filter, b = filter[1]['b'], a = filter[1]['a'], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
 
-        if resample is not None:
-            raw.resample(sfreq=resample)
         if split_trial:
             marker_new_trial = get_event_id_by_type(marker, 'new-trial')
             raw_intervals = split_raw_to_trial(raw, marker_new_trial)
@@ -145,6 +143,8 @@ def export_epoch(data_dir,
             new_id_init = last_used_event_id
             epochs.append(_epochs)
     epochs = mne.concatenate_epochs(epochs, add_offset=True) 
+    if resample is not None:
+        epochs.resample(sfreq=resample, n_jobs = -1)
     return epochs
 
 def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None):
