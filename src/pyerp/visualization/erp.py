@@ -2,6 +2,29 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 
+def plot_butterfly(epochs, picks = None, figsize=[6.4, 4.8]):
+    times = epochs.times
+    
+    epochs = epochs.copy()
+
+    if picks is not None:
+        epochs.pick(picks = picks)
+        
+    
+    data = epochs.get_data(units = 'uV')
+    data = np.squeeze(data)
+
+    if data.ndim == 3:
+        raise ValueError("select single channel.")
+
+    fig = plt.figure(figsize=figsize)
+    for m in range(data.shape[1]):
+        plt.plot(times, data[m,:], color = 'tab:gray')
+    
+    plt.plot(times, np.mean(data, axis=0), color = 'tab:orange')
+    
+    return fig
+
 def plot_erp_general(tmin, tmax, fontsize = 12, legend_loc = 'best'):
     plt.xlim(tmin, tmax)
     plt.xlabel("Time (s)", fontsize=fontsize)

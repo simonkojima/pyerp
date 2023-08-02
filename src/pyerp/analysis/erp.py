@@ -7,6 +7,36 @@ import mne
 from ..utils.analysis import get_target_from_trial, get_event_id_by_type
 from .raw import split_raw_to_trial
 
+def reject(epochs, eeg, eog = None):
+    """
+    Parameters
+    ==========
+    epochs : instance of mne.epochs
+    min : minimum amplitude accepted. Unit is in micro Volts.
+    max : maximum amplitude accepted. Unit is in micro Volts.
+    """
+
+    indices = [False for m in range(epochs.__len__())]
+
+    eeg_data = epochs.get_data(picks = 'eeg', units = 'uV')
+    for m in range(epochs.__len__()):
+        max_eeg = np.max(np.max(np.squeeze(eeg_data[m,:,:])))
+        min_eeg = np.min(np.min(np.squeeze(eeg_data[m,:,:])))
+        if min_eeg < eeg[0] or max_eeg > eeg[1]:
+            indices[m] = True
+
+    if eog is not None: 
+        eog_data = epochs.get_data(picks = 'eog', units = 'uV')
+        for m in range(epochs.__len__()):
+            max_eog = np.max(np.max(np.squeeze(eog_data[m,:,:])))
+            min_eog = np.min(np.min(np.squeeze(eog_data[m,:,:])))
+            if min_eog < eog[0] or max_eog > eog[1]:
+                indices[m] = True
+                
+    epochs.drop(indices = indices)
+
+    return epochs
+
 def get_min_max(epochs, tags = None, average = False, picks = None, units = None, tmin = None, tmax = None):
     from ..utils.analysis import process_tags
 
