@@ -13,3 +13,5 @@ from . import utils
 #from . import utils
 from .visualization.erp import *
 from .visualization.visualization import *
+from .visualization.image import *
+from .visualization.plot import *
