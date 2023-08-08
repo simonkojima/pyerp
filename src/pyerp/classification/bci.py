@@ -1,6 +1,6 @@
 def bci_simulation(epochs,
                    task,
-                   vectorizer,
+                   ivals,
                    clf,
                    epochs_filter_train = None,
                    enable_dynamic_stopping = True,
@@ -18,10 +18,12 @@ def bci_simulation(epochs,
     from ..utils.analysis import (get_binary_epochs, get_target_of_trial, get_events, get_n_trials_in_run,
                             event_name_from_id, get_val_in_tag, split_cv, get_run_list_in_task)
     from .metrices import calc_itr
+    from .classification import EpochsVectorizer
     from sklearn.metrics import accuracy_score
 
     run_list = get_run_list_in_task(epochs, task)
     cv = split_cv(run_list)
+
 
     scores = dict()
     scores['labels'] = list()
@@ -60,6 +62,7 @@ def bci_simulation(epochs,
 
         X.pick_types(eeg=True)
 
+        vectorizer = EpochsVectorizer(jumping_mean_ivals=ivals, sfreq = X.info['sfreq'], t_ref = X.times[0])
         X = vectorizer.transform(X)
         clf.fit(X, Y)
         n_trials = get_n_trials_in_run(epochs, test)
@@ -182,7 +185,7 @@ def bci_simulation(epochs,
         scores['labels'].append(labels)
         scores['preds'].append(preds)
         scores['score'].append(accuracy_score(labels, preds))
-        req_time = np.mean(n_epochs)*soa + (epochs.tmax - soa)
+        req_time = np.mean(n_epochs)*soa + (np.max(np.array(ivals)) - soa)
         req_time = req_time / 60
         scores['itr'].append(calc_itr(6, accuracy_score(labels, preds), req_time))
         scores['n_channels'].append(len(epochs_trial.ch_names))
@@ -197,7 +200,7 @@ def bci_simulation(epochs,
             scores_dynamic_stopping['pvalue'].append(pvalue)
             scores_dynamic_stopping['n_stimulus'].append(n_stimulus)
             scores_dynamic_stopping['n_channels'].append(len(epochs_trial.ch_names))
-            req_time = np.mean(n_stimulus)*soa + (epochs.tmax - soa)
+            req_time = np.mean(n_stimulus)*soa + (np.max(np.array(ivals)) - soa)
             req_time = req_time / 60
             scores_dynamic_stopping['itr'].append(calc_itr(len(events_in_trial), accuracy_score(labels, preds_dynamic_stopping), req_time))
             scores_dynamic_stopping['distances'].append(distances)
