@@ -95,7 +95,7 @@ def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsi
 
     return fig
 
-def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], tags = None, vlim = None, figsize = [6.4, 4.8], linewidth = 2, legend_loc = 'best', sns = True):
+def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], tags = None, vlim = None, xlim = None, maplimits = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
     from ..utils.analysis import get_binary_epochs
     from ..analysis.erp import signed_square_r
 
@@ -131,30 +131,38 @@ def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], tags = None, vlim = None, figsize
                 linewidth = linewidth,
                 label = "nontarget(%s,N=%d)" %(ch, N_nt)) 
     plt.setp(ax0.get_xticklabels(), visible = False)
-    plt.xlim(X.tmin, X.tmax)
+    if xlim is None:
+        plt.xlim(X.tmin, X.tmax)
+    else:
+        plt.xlim(xlim)
     if vlim is not None:
         plt.ylim(vlim[0], vlim[1])
-    plt.ylabel('Potential ($\mu$V)', fontsize=12)
+    plt.ylabel('Potential ($\mu$V)', fontsize=fontsize)
     if baseline is not None:
         handles, labels = plt.gca().get_legend_handles_labels()
         order = make_label_last(labels, 'baseline')
-        legend_in_order(handles, labels, order, fontsize=12, loc=legend_loc)
+        legend_in_order(handles, labels, order, fontsize=fontsize_legend, loc=legend_loc)
     else:
-        plt.legend(fontsize=12, loc=legend_loc)
-    plt.tick_params(labelsize=12)
+        plt.legend(fontsize=fontsize_legend, loc=legend_loc)
+    plt.tick_params(labelsize=fontsize)
 
     r2 = signed_square_r(X['target'].get_data(picks=picks, units='uV'),
                          X['nontarget'].get_data(picks=picks, units='uV'))
     ax1 = plt.subplot(gs[1,0], sharex = ax0)
-    pc = ax1.pcolormesh(np.atleast_2d(np.append(times, times[-1]+1/fs)), [2,1,0], r2, cmap='seismic', vmin=-0.03, vmax=0.03)
+    if maplimits is None:
+        maplimits = [-0.03, 0.03]
+    pc = ax1.pcolormesh(np.atleast_2d(np.append(times, times[-1]+1/fs)), [2,1,0], r2, cmap='seismic', vmin=maplimits[0], vmax=maplimits[1])
     plt.setp(ax1.get_yticklabels(), visible = False)
-    plt.ylabel('\n'.join(picks), rotation = 'horizontal', horizontalalignment='right', verticalalignment='center')
+    plt.ylabel('\n'.join(picks), rotation = 'horizontal', horizontalalignment='right', verticalalignment='center', fontsize=fontsize)
     #plt.ylabel("abc\ndef", rotation = 'horizontal', horizontalalignment='right', verticalalignment='center')
-    plt.xlabel("Time (s)", fontsize=12)
-    plt.tick_params(labelsize=12)
+    plt.xlabel("Time (s)", fontsize=fontsize)
+    plt.tick_params(labelsize=fontsize)
 
     axes = plt.subplot(gs[0:2,1])
-    plt.colorbar(pc, cax = axes)
+    cbar = plt.colorbar(pc, cax = axes)
+    cbar.set_ticks([maplimits[0], 0, maplimits[1]])
+    cbar.ax.tick_params(labelsize=fontsize)
+    #plt.colorbar().a
 
     plt.subplots_adjust(hspace=.0)
     plt.subplots_adjust(wspace=.02)
