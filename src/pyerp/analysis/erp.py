@@ -18,12 +18,13 @@ def reject(epochs, eeg, eog = None):
 
     indices = [False for m in range(epochs.__len__())]
 
-    eeg_data = epochs.get_data(picks = 'eeg', units = 'uV')
-    for m in range(epochs.__len__()):
-        max_eeg = np.max(np.max(np.squeeze(eeg_data[m,:,:])))
-        min_eeg = np.min(np.min(np.squeeze(eeg_data[m,:,:])))
-        if min_eeg < eeg[0] or max_eeg > eeg[1]:
-            indices[m] = True
+    if eeg is not None:
+        eeg_data = epochs.get_data(picks = 'eeg', units = 'uV')
+        for m in range(epochs.__len__()):
+            max_eeg = np.max(np.max(np.squeeze(eeg_data[m,:,:])))
+            min_eeg = np.min(np.min(np.squeeze(eeg_data[m,:,:])))
+            if min_eeg < eeg[0] or max_eeg > eeg[1]:
+                indices[m] = True
 
     if eog is not None: 
         eog_data = epochs.get_data(picks = 'eog', units = 'uV')
