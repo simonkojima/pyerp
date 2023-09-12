@@ -2,7 +2,33 @@ import os
 import sys
 
 import numpy as np
+import scipy
 import mne
+
+def reconstruct_raw(raw):
+    raw = mne.io.RawArray(raw.get_data(), mne.create_info(raw.ch_names, raw.info['sfreq']))
+    return raw
+
+def concatenate_raws_vhdr(files, sos, eog_channels = ['vEOG, hEOG'], len_transition = 1.0, save = False, overwrite = False):
+    from .signal import apply_sosfilter, round_edge
+    raws = list()
+    for idx, file in enumerate(files):
+        raw = mne.io.read_raw_brainvision(vhdr_fname = file, preload=True)
+        for ch in eog_channels:
+            raw.set_channel_types({ch: 'eog'})
+        Fs = np.array(raw.info['sfreq'])
+
+        raw.apply_function(apply_sosfilter, picks = 'all', n_jobs = -1, channel_wise = True, sos=sos, zero_phase = True)
+        raw.apply_function(round_edge, picks = 'all', n_jobs = -1, channel_wise = True, Fs = Fs, len_transition = len_transition)
+        
+        raws.append(raw)
+
+    raw = mne.concatenate_raws(raws)
+
+    if save is not False:
+        raw.save(save, overwrite = overwrite)    
+    
+    return raw
 
 def split_raw_to_trial(raw, marker_new_trial):
     """
