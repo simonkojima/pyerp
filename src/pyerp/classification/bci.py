@@ -1,3 +1,11 @@
+def bci_simulation_bci(train_raws,
+                       test_raws,
+                       marker,
+                       ivals,
+                       clf):
+    pass
+    
+
 def bci_simulation(epochs,
                    task,
                    ivals,
@@ -11,7 +19,8 @@ def bci_simulation(epochs,
                    adaptation = False,
                    clf_adaptation = None,
                    soa = None,
-                   reject = None):
+                   reject = None,
+                   enable_ica = False):
     from scipy import stats
     import numpy as np
 
@@ -23,7 +32,6 @@ def bci_simulation(epochs,
 
     run_list = get_run_list_in_task(epochs, task)
     cv = split_cv(run_list)
-
 
     scores = dict()
     scores['labels'] = list()

@@ -23,6 +23,8 @@ def barplot(data,
             suptitle=None,
             show=True,
             space_before_avg = False,
+            figsize=[6.4, 4.8],
+            fontsize = 12,
             fname=None):
     """
     Parameters
@@ -70,7 +72,7 @@ def barplot(data,
 
     if enable_seaborn:
         sns.set()
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(figsize=figsize)
     for idx, child in enumerate(children):
         ax.bar(x-(n_children*width/2)+(idx*width), data[:, idx], width, label=child, color=color[idx])
     if suptitle is not None:
@@ -78,15 +80,16 @@ def barplot(data,
     if title is not None:
         ax.set_title(title)
     if ylabel is not None:
-        ax.set_ylabel(ylabel)
+        ax.set_ylabel(ylabel, fontsize = fontsize)
     if xlabel is not None:
-        ax.set_xlabel(xlabel)
+        ax.set_xlabel(xlabel, fontsize = fontsize)
     if ylim is not None:
         plt.ylim(ylim)
     #ax.set_xlabel('Subject', fontsize=18)
-    ax.set_xticks(x, parents)
+    ax.set_xticks(x, parents, fontsize = fontsize)
+    ax.yaxis.set_tick_params(labelsize=fontsize)
     #ax.legend(children, fontsize=12)
-    ax.legend(children)
+    ax.legend(children, fontsize = fontsize)
     #plt.tick_params(labelsize=18)
     fig.tight_layout()
 

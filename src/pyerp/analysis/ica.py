@@ -6,6 +6,16 @@ from .signal import apply_sosfilter, round_edge
 from .raw import concatenate_raws_vhdr, reconstruct_raw
 
 def find_bad_eog(raw, ica, filter = [1, 10], threshold = 0.9):
+    """
+    Parameters
+    ==========
+
+    raw : raw instance contains eog channels.
+    ica : ica instance
+    filter : filter range will be used for eog channels
+    threshold, numerical or 'max': 
+    
+    """
     #raw_eeg_ = mne.io.RawArray(data = raw.get_data(), info = mne.create_info(raw_eeg.ch_names, Fs))
 
     Fs = raw.info['sfreq']
@@ -15,9 +25,6 @@ def find_bad_eog(raw, ica, filter = [1, 10], threshold = 0.9):
 
     raw_eog = reconstruct_raw(raw_eog) 
     raw_eeg = reconstruct_raw(raw_eeg)
-    
-    print(raw_eog)
-    print(raw_eeg)
 
     IC = ica.get_sources(raw_eeg)
     
@@ -39,8 +46,13 @@ def find_bad_eog(raw, ica, filter = [1, 10], threshold = 0.9):
             a = scipy.stats.pearsonr(x = np.squeeze(data_eog), y = np.squeeze(IC.get_data(picks = ic)))
 
             score.append(a[0])
-            if np.absolute(a[0]) >= threshold:
-                indices.append(idx)
+            
+        if threshold == 'max':
+            I = np.argmax(np.absolute(np.array(score)))
+            indices.append(I)
+        else:
+            I = np.where(np.absolute(np.array(score)) >= threshold)
+            indices += I[0].tolist()
                 
         scores.append(score)
 

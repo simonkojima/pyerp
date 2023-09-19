@@ -128,14 +128,15 @@ def export_epoch(data_dir,
                 baseline = (None, 0),
                 subject_code = 'sub01',
                 split_trial = False,
-                ica_enable = False,
-                ica_dir = None,
-                ica_type = 'eog',
+                #ica_enable = False,
+                #ica_dir = None,
+                #ica_type = 'eog',
+                ica = None, # by ica instance
                 apply_function = None,
                 **kwargs):
     new_id_init = 2**16 # maximum id : 2147483647
-    if ica_enable and ica_dir is None:
-        ica_dir = data_dir
+    #if ica_enable and ica_dir is None:
+    #    ica_dir = data_dir
 
     epochs = list()
     for idx, file in enumerate(eeg_files):
@@ -143,8 +144,10 @@ def export_epoch(data_dir,
         run = idx + 1
         raw = mne.io.read_raw(os.path.join(data_dir, file[0]+".%s"%file_type),
                             preload=True)
-        if ica_enable:
-            ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
+        #if ica_enable:
+        #    ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
+        #    ica.apply(raw)
+        if ica is not None:
             ica.apply(raw)
             
         if apply_function is not None:
