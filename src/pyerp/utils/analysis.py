@@ -4,6 +4,18 @@ import sys
 import numpy as np
 import mne
 
+def get_tags(epochs):
+    tags = list(epochs.event_id.keys())
+    return tags
+
+def get_run_list(epochs):
+    tags = list(epochs.event_id.keys())
+    runs = list()
+    for tag in tags:
+        runs.append(int(get_val_in_tag(tag, 'run')))
+    val = np.unique(runs).tolist()
+    return val
+
 def get_event_id(epochs, tags):
     return list(epochs['/'.join(tags)].event_id.values())
 

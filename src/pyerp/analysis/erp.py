@@ -119,6 +119,7 @@ def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code
 def export_epoch(data_dir,
                 eeg_files,
                 marker,
+                eog_channels = None,
                 file_type = "vhdr",
                 filter = None,
                 zero_phase = True,
@@ -142,8 +143,16 @@ def export_epoch(data_dir,
     for idx, file in enumerate(eeg_files):
         task = file[1]
         run = idx + 1
-        raw = mne.io.read_raw(os.path.join(data_dir, file[0]+".%s"%file_type),
-                            preload=True)
+        if file_type is not None:
+            fname = "%s.%s"%(file[0], file_type)
+        else:
+            fname = file[0]
+        raw = mne.io.read_raw(os.path.join(data_dir, fname), preload=True)
+        
+        if eog_channels is not None:
+            for ch in eog_channels:
+                raw.set_channel_types({ch: 'eog'})
+
         #if ica_enable:
         #    ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
         #    ica.apply(raw)

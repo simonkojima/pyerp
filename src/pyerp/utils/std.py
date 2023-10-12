@@ -6,6 +6,11 @@ def mkdir(dir):
     isExist = os.path.exists(dir)
     if not isExist:
         os.makedirs(dir)
+        
+def save_json(file, data):
+    import json
+    with open(file, "w") as f:
+        json.dump(data, f, indent = 4)
 
 def input_binary(message, default = None, suffix = True):
     if suffix:
