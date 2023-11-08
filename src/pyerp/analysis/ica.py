@@ -2,7 +2,7 @@ import numpy as np
 import scipy
 import mne
 
-from .signal import apply_sosfilter, round_edge
+from .signal import apply_sosfilter
 from .raw import concatenate_raws_vhdr, reconstruct_raw
 
 def find_bad_eog(raw, ica, filter = [1, 10], threshold = 0.9):

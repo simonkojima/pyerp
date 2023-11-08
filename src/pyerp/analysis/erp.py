@@ -190,7 +190,7 @@ def export_epoch(data_dir,
         epochs.resample(sfreq=resample, n_jobs = -1)
     return epochs
 
-def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None):
+def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', units = None, seed=None):
     """
     returns peak amplitude with boot strapping.
 
@@ -210,11 +210,12 @@ def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None):
     ==========
     Musso et al., Aphasia recovery by language training using a brain–computer interface: a proof-of-concept study, (2022)
     """
+    from tqdm import tqdm
 
     if ch != 'all':
         epochs = epochs.pick_channels(ch)
 
-    X = epochs.get_data()
+    X = epochs.get_data(units = units)
     n_epochs, n_ch, n_samples = X.shape
 
     n_epochs_bootstrap = int(n_epochs*r)
@@ -227,10 +228,10 @@ def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None):
         func = np.min
 
     amp = list()
-    for reps in range(N):
+    for reps in tqdm(range(N)):
         idx_epochs_shuffled = rng.integers(low=0, high=n_epochs, size=n_epochs_bootstrap)
         X_bootstrap = X[idx_epochs_shuffled,:,:]
-        amp.append(func(X_bootstrap))
+        amp.append(func(np.mean(X_bootstrap, axis = 0)))
     
     amp = np.array(amp)
 
@@ -271,6 +272,7 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
     Musso et al., Aphasia recovery by language training using a brain–computer interface: a proof-of-concept study, (2022)
     """
     from scipy import stats
+    from tqdm import tqdm
 
     time = T.times
 
@@ -314,7 +316,7 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
     rng = np.random.default_rng(seed=seed)
 
     latency = list()
-    for reps in range(N):
+    for reps in tqdm(range(N)):
         idx_epochs_shuffled = dict()
         X_bootstrap = dict()
         for stim in ['target','non-target']:
