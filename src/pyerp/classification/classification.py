@@ -25,7 +25,7 @@ def classify_binary(epochs,
 
     X, Y = get_binary_epochs(epochs, tags) 
     
-    vectorizer = EpochsVectorizer(jumping_mean_ivals=ivals, sfreq = X.info['sfreq'], t_ref = X.times[0])
+    vectorizer = EpochsVectorizer(ivals=ivals)
     X = vectorizer.transform(X)
 
     r['n_features'] = X.shape[1]

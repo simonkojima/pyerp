@@ -70,7 +70,7 @@ def bci_simulation(epochs,
 
         X.pick_types(eeg=True)
 
-        vectorizer = EpochsVectorizer(jumping_mean_ivals=ivals, sfreq = X.info['sfreq'], t_ref = X.times[0])
+        vectorizer = EpochsVectorizer(ivals=ivals)
         X = vectorizer.transform(X)
         clf.fit(X, Y)
         n_trials = get_n_trials_in_run(epochs, test)
