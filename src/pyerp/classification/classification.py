@@ -64,7 +64,55 @@ def classify_binary(epochs,
 
     return r
 
-class EpochsVectorizer(BaseEstimator, TransformerMixin):
+class EpochsVectorizer():
+    def __init__(self,
+                 ivals,
+                 channel_prime = True):
+        self.ivals = ivals
+        self.channel_prime = channel_prime
+        
+        """
+        
+        channel_prime:
+        if True, vec = [ch1_t1, ch1_t2, ch1_t3, ch2_t1, ch2_t2, ch2_t3]
+
+
+        """
+
+    def fit(self, X, y=None):
+        """fit."""
+        return self
+
+    def transform(self, X):
+        
+        tmin = X.times[0]
+        tmax = X.times[-1]
+        
+        data = X.get_data()
+        
+        if np.min(np.array(self.ivals).flatten()) < tmin:
+            raise ValueError("minimum time value of ivals belows tmin of epochs.")
+        
+        if np.max(np.array(self.ivals).flatten()) > tmax:
+            raise ValueError("maximum time value of ivals exceeds tmax of epochs.")
+        
+        vec = np.zeros((data.shape[0], data.shape[1], len(self.ivals)))
+
+        for m, ival in enumerate(self.ivals):
+            idx = X.time_as_index(ival)
+            idx = list(range(idx[0], idx[1]+1))
+            vec[:, :, m] = np.mean(data[:, :, idx], axis=2)
+
+        if self.channel_prime:
+            vec = np.reshape(vec, (vec.shape[0], -1), order='C')
+        else:
+            vec = np.reshape(vec, (vec.shape[0], -1), order='F')
+            
+        return vec 
+        
+        
+
+class _EpochsVectorizer(BaseEstimator, TransformerMixin):
 
     """
         Original code of this class by implemented by Jan Sosulski. Modified by Simon Kojima.
