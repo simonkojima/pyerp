@@ -95,6 +95,135 @@ def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsi
 
     return fig
 
+def plot_2ch_squared_r(target, nontarget, channels, r2, times, fs, baseline = None, mesh = None, N = None, vlim = None, xticks = None, maplimits = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
+    """
+    Parameters
+    ==========
+    
+    target: ndarray, shape of (2, n_samples)
+        target[0]: channel 1
+        target[1]: channel 2
+        
+    nontarget: ndarray, shape of (2, n_samples)
+        nontarget[0]: channel 1
+        nontarget[1]: channel 2
+
+    channels: channel labels, array-like
+
+    r2: signed-r^2 value, ndarray
+        shape of (2, n_samples)
+        r2[0]: channel 1
+        r2[1]: channel 2
+
+    times: time samples
+
+    fs: sampling frequency
+
+    baseline: baseline range in time
+    
+    mesh: time ranges to plot mesh., list has length of number of mesh
+        mesh[0] = [t0, t1]: area between time [t0, t1] will be meshed.
+    
+    mesh_colors
+
+    N: number of samples to obtain the averaged responses
+        N[0][0]: ch1, target
+        N[0][1]: ch1, nontarget
+        N[1][0]: ch2, target
+        N[1][1]: ch2, nontarget
+    
+    """
+    if sns:
+        import seaborn as sns
+        sns.set()
+        
+    params = dict()
+
+    fig = plt.figure(figsize=figsize)
+    colors = ['tab:orange', 'tab:blue']
+    
+    gs = gridspec.GridSpec(2,2, height_ratios=[10,1], width_ratios=[10,0.5])
+
+    ax0 = plt.subplot(gs[0,0])
+    if baseline is not None:
+        plt.plot(baseline, [0,0], color = 'tab:gray', linestyle = '-', linewidth = linewidth, label='baseline')
+
+    for idx, ch in enumerate(channels):
+        label = [None, None]
+        if N is None:
+            label[0] = "target(%s)"%ch
+            label[1] = "nontarget(%s)"%ch
+        else:
+            label[0] = "target(%s,N=%d)"%(ch, N[idx][0])
+            label[1] = "nontarget(%s,N=%d)"%(ch, N[idx][1])
+        ax0.plot(times,
+                target[idx],
+                color = colors[idx],
+                linestyle = '-',
+                linewidth = linewidth,
+                label=label[0])
+        ax0.plot(times,
+                nontarget[idx],
+                color = colors[idx],
+                linestyle = '--',
+                linewidth = linewidth,
+                label = label[1]) 
+
+    if xticks is not None:
+        ax0.set_xticks(xticks)
+    plt.setp(ax0.get_xticklabels(), visible = False)
+    plt.xlim(times[0], times[-1])
+    plt.ylabel('Potential ($\mu$V)', fontsize=fontsize)
+    if baseline is not None:
+        handles, labels = plt.gca().get_legend_handles_labels()
+        order = make_label_last(labels, 'baseline')
+        legend_in_order(handles, labels, order, fontsize=fontsize_legend, loc=legend_loc)
+    else:
+        plt.legend(fontsize=fontsize_legend, loc=legend_loc)
+    plt.tick_params(labelsize=fontsize)
+    if vlim is not None:
+        plt.ylim(vlim[0], vlim[1])
+    else:
+        plt.ylim(plt.ylim())
+    params['ylim'] = plt.ylim()
+    if mesh is not None:
+        #from matplotlib.transforms import Bbox
+        ylim = plt.ylim()
+        for t in mesh:
+            x = [t[0], t[0], t[1], t[1], t[0]]
+            y = [ylim[0], ylim[1], ylim[1], ylim[0], ylim[0]]
+            ax0.fill(x, y, color = t[2], alpha = 0.2, linestyle = 'None')
+
+    #r2 = signed_square_r(X['target'].get_data(picks=picks, units='uV'),
+    #                     X['nontarget'].get_data(picks=picks, units='uV'))
+    ax1 = plt.subplot(gs[1,0], sharex = ax0)
+    if maplimits is None:
+        maplimits = [-0.03, 0.03]
+    elif maplimits == 'auto':
+        _max = np.max(np.absolute(r2))
+        maplimits = [-1*_max, _max]
+    params['maplimits'] = maplimits
+    
+    pc = ax1.pcolormesh(np.atleast_2d(np.append(times, times[-1]+1/fs)), [2,1,0], r2, cmap='seismic', vmin=maplimits[0], vmax=maplimits[1])
+    plt.setp(ax1.get_yticklabels(), visible = False)
+    plt.ylabel('\n'.join(channels), rotation = 'horizontal', horizontalalignment='right', verticalalignment='center', fontsize=fontsize)
+    #plt.ylabel("abc\ndef", rotation = 'horizontal', horizontalalignment='right', verticalalignment='center')
+    plt.xlabel("Time (s)", fontsize=fontsize)
+    if xticks is not None:
+        ax1.set_xticks(xticks)
+    plt.tick_params(labelsize=fontsize)
+
+    axes = plt.subplot(gs[0:2,1])
+    cbar = plt.colorbar(pc, cax = axes)
+    cbar.set_ticks([maplimits[0], 0, maplimits[1]])
+    cbar.ax.tick_params(labelsize=fontsize)
+    #plt.colorbar().a
+
+    plt.subplots_adjust(hspace=.0)
+    plt.subplots_adjust(wspace=.02)
+
+    return fig, params
+
 def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], tags = None, vlim = None, xlim = None, maplimits = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
     from ..utils.analysis import get_binary_epochs
     from ..analysis.erp import signed_square_r

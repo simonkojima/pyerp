@@ -217,6 +217,8 @@ def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', units = None, seed=N
 
     X = epochs.get_data(units = units)
     n_epochs, n_ch, n_samples = X.shape
+    
+    ch_names = epochs.ch_names
 
     n_epochs_bootstrap = int(n_epochs*r)
 
@@ -224,18 +226,30 @@ def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', units = None, seed=N
 
     if mode == 'pos':
         func = np.max
+        func_arg = np.argmax
     elif mode == 'neg':
         func = np.min
+        func_arg = np.argmin
 
     amp = list()
+    channels = list()
+    idx = np.arange(n_epochs)
     for reps in tqdm(range(N)):
-        idx_epochs_shuffled = rng.integers(low=0, high=n_epochs, size=n_epochs_bootstrap)
+
+        idx_epochs_shuffled = idx.copy()
+        rng.shuffle(idx_epochs_shuffled)
+        idx_epochs_shuffled = idx_epochs_shuffled[0:n_epochs_bootstrap]
+
         X_bootstrap = X[idx_epochs_shuffled,:,:]
-        amp.append(func(np.mean(X_bootstrap, axis = 0)))
+        averaged = np.mean(X_bootstrap, axis = 0)
+        amp.append(func(averaged))
+
+        I = func_arg(func(averaged, axis = 1))
+        channels.append(ch_names[I])
     
     amp = np.array(amp)
 
-    return amp
+    return amp, channels
 
 def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=None, tmax='auto', alternative='two-sided', p_th=None):
     """
@@ -258,7 +272,7 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
     seed : None, int, ..., default=None
         seed for numpy.random.default_rng(), see detail on numpy documentation
     tmin : None, 'auto', float, default=None
-        minimum time for latency. if set to 'auto', tmin will be set to 50 when mode is neg and 150 when mode is pos.
+        minimum time (in seconds) for latency. if set to 'auto', tmin will be set to 0.05 when mode is neg and 0.15 when mode is pos.
         if set to None, any latency could be taken.
     tmax : 'auto', float, None, default='auto'
         latency when significant difference was not detected., if 'auto' tmax will be returned, if None, None will be returned.
@@ -304,6 +318,11 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
     if ch != 'all':
         epochs['target'] = epochs['target'].pick_channels(ch)
         epochs['non-target'] = epochs['non-target'].pick_channels(ch)
+        
+    ch_names = epochs['target'].ch_names
+    
+    if ch_names != epochs['non-target'].ch_names:
+        raise ValueError("channel subset for target and nontarget is not identical.")
 
     X = dict()
     n_epochs = dict()
@@ -316,11 +335,16 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
     rng = np.random.default_rng(seed=seed)
 
     latency = list()
+    channels = list()
     for reps in tqdm(range(N)):
         idx_epochs_shuffled = dict()
         X_bootstrap = dict()
         for stim in ['target','non-target']:
-            idx_epochs_shuffled[stim] = rng.integers(low=0, high=n_epochs[stim], size=n_epochs_bootstrap[stim])
+
+            idx = np.arange(n_epochs[stim])
+            rng.shuffle(idx)
+            idx_epochs_shuffled[stim] = idx[0:n_epochs_bootstrap[stim]]
+            
             X_bootstrap[stim] = X[stim][idx_epochs_shuffled[stim],:,:]
         if alternative == 'one-sided':
             if mode == 'pos':
@@ -329,9 +353,10 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
                 t_score, p = stats.ttest_ind(X_bootstrap['target'], X_bootstrap['non-target'], axis=0, equal_var = False, alternative='less')
         elif alternative == 'two-sided':
                 t_score, p = stats.ttest_ind(X_bootstrap['target'], X_bootstrap['non-target'], axis=0, equal_var = False, alternative='two-sided')
+        
         latency_tmp = list()
         for idx in range(p.shape[0]):
-            t_idx = np.where(p[idx]<=p_th)[0]
+            t_idx = np.where(p[idx, :]<=p_th)[0]
             if len(t_idx) == 0:
                 latency_tmp.append(tmax)
             else:
@@ -348,10 +373,14 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
                     latency_tmp.append(tmax)
                 else:
                     latency_tmp.append(time[t_idx[0]])
-        latency.append(min(latency_tmp))
-    
-    return np.array(latency)
 
+        latency_tmp = np.array(latency_tmp) 
+        I = np.argmin(latency_tmp)
+
+        latency.append(np.min(latency_tmp))
+        channels.append(ch_names[I])
+    
+    return np.array(latency), channels
 
 def r_value(x1, x2):
     """

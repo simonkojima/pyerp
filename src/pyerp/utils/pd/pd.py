@@ -44,7 +44,7 @@ class quickSave(object):
                 print("Warning (pylibs) : column value cannot overwrite, original culumns will be used.")
             columns = df.columns
             df_add = pd.DataFrame(data=data, columns=columns, index=index)
-            df = pd.concat([df, df_add])
+            df = pd.concat([df, df_add], ignore_index=True)
         else:
             df = pd.DataFrame(data=data, index=index, columns=columns)
             self.is_exists = True
