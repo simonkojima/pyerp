@@ -23,6 +23,7 @@ def barplot(data,
             suptitle=None,
             show=True,
             space_before_avg = False,
+            legend_loc = 'upper right',
             figsize=[6.4, 4.8],
             fontsize = 12,
             fname=None):
@@ -45,12 +46,13 @@ def barplot(data,
         children = [str(i) for i in range(1, n_children+1)]        
     
     if avg_parents:
+        mean = np.mean(data, axis=0, keepdims=True)
         if space_before_avg:
             data = np.vstack((data, np.zeros((1, n_children))))
             n_parents += 1
             parents = parents.copy()
             parents.append('')
-        data = np.vstack((data, np.mean(data, axis=0, keepdims=True)))
+        data = np.vstack((data, mean))
         n_parents += 1
         parents = parents.copy()
         parents.append('avg')
@@ -69,12 +71,19 @@ def barplot(data,
         width = ratio*0.5*2/n_children
 
     x = np.arange(n_parents)
+    #xs = np.arange(n_parents)
 
     if enable_seaborn:
         sns.set()
     fig, ax = plt.subplots(figsize=figsize)
+    #for idx, child in enumerate(children):
+    #    ax.bar(x-(n_children*width/2)+(idx*width), data[:, idx], width, label=child, color=color[idx])
     for idx, child in enumerate(children):
-        ax.bar(x-(n_children*width/2)+(idx*width), data[:, idx], width, label=child, color=color[idx])
+            #if err is None or err[idx_x, idx] is None:
+            if err is None:
+                ax.bar(x = x-(n_children*width/2)+(idx*width), height = data[:, idx], width = width, label=child, color=color[idx])
+            else:
+                ax.bar(x = x-(n_children*width/2)+(idx*width), height = data[:, idx], width = width, label=child, color=color[idx], yerr = err[:, idx])
     if suptitle is not None:
         fig.suptitle(suptitle)
     if title is not None:
@@ -89,7 +98,7 @@ def barplot(data,
     ax.set_xticks(x, parents, fontsize = fontsize)
     ax.yaxis.set_tick_params(labelsize=fontsize)
     #ax.legend(children, fontsize=12)
-    ax.legend(children, fontsize = fontsize)
+    ax.legend(children, fontsize = fontsize, loc = legend_loc)
     #plt.tick_params(labelsize=18)
     fig.tight_layout()
 
