@@ -74,7 +74,8 @@ class EpochsVectorizer():
         """
         
         channel_prime:
-        if True, vec = [ch1_t1, ch1_t2, ch1_t3, ch2_t1, ch2_t2, ch2_t3]
+        if True,  vec = [ch1_t1, ch2_t1, ch3_t1, ch1_t2, ch2_t2, ch3_t2, ...]
+        if False, vec = [ch1_t1, ch1_t2, ch1_t3, ch2_t1, ch2_t2, ch2_t3, ...]
 
 
         """
@@ -104,9 +105,9 @@ class EpochsVectorizer():
             vec[:, :, m] = np.mean(data[:, :, idx], axis=2)
 
         if self.channel_prime:
-            vec = np.reshape(vec, (vec.shape[0], -1), order='C')
-        else:
             vec = np.reshape(vec, (vec.shape[0], -1), order='F')
+        else:
+            vec = np.reshape(vec, (vec.shape[0], -1), order='C')
             
         return vec 
         

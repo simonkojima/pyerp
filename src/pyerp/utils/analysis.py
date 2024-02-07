@@ -16,6 +16,14 @@ def get_run_list(epochs):
     val = np.unique(runs).tolist()
     return val
 
+def get_task_list(epochs):
+    tags = list(epochs.event_id.keys())
+    tasks = list()
+    for tag in tags:
+        tasks.append(get_val_in_tag(tag, 'task'))
+    val = np.unique(tasks).tolist()
+    return val
+
 def get_event_id(epochs, tags):
     return list(epochs['/'.join(tags)].event_id.values())
 

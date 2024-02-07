@@ -95,7 +95,7 @@ def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsi
 
     return fig
 
-def plot_2ch_squared_r(target, nontarget, channels, r2, times, fs, baseline = None, mesh = None, N = None, vlim = None, xticks = None, maplimits = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
+def plot_2ch_squared_r(target, nontarget, channels, r2, times, fs, baseline = None, mesh = None, N = None, vlim = None, xticks = None, cmap = 'seismic', maplimits = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
     """
     Parameters
     ==========
@@ -204,7 +204,7 @@ def plot_2ch_squared_r(target, nontarget, channels, r2, times, fs, baseline = No
         maplimits = [-1*_max, _max]
     params['maplimits'] = maplimits
     
-    pc = ax1.pcolormesh(np.atleast_2d(np.append(times, times[-1]+1/fs)), [2,1,0], r2, cmap='seismic', vmin=maplimits[0], vmax=maplimits[1])
+    pc = ax1.pcolormesh(np.atleast_2d(np.append(times, times[-1]+1/fs)), [2,1,0], r2, cmap=cmap, vmin=maplimits[0], vmax=maplimits[1])
     plt.setp(ax1.get_yticklabels(), visible = False)
     plt.ylabel('\n'.join(channels), rotation = 'horizontal', horizontalalignment='right', verticalalignment='center', fontsize=fontsize)
     #plt.ylabel("abc\ndef", rotation = 'horizontal', horizontalalignment='right', verticalalignment='center')
@@ -224,7 +224,7 @@ def plot_2ch_squared_r(target, nontarget, channels, r2, times, fs, baseline = No
 
     return fig, params
 
-def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], tags = None, vlim = None, xlim = None, maplimits = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
+def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], tags = None, vlim = None, xlim = None, maplimits = None, cmap = 'seismic', figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
     from ..utils.analysis import get_binary_epochs
     from ..analysis.erp import signed_square_r
 
@@ -280,7 +280,7 @@ def plot_2ch_tnt(epochs, picks = ['Cz', 'F3'], tags = None, vlim = None, xlim = 
     ax1 = plt.subplot(gs[1,0], sharex = ax0)
     if maplimits is None:
         maplimits = [-0.03, 0.03]
-    pc = ax1.pcolormesh(np.atleast_2d(np.append(times, times[-1]+1/fs)), [2,1,0], r2, cmap='seismic', vmin=maplimits[0], vmax=maplimits[1])
+    pc = ax1.pcolormesh(np.atleast_2d(np.append(times, times[-1]+1/fs)), [2,1,0], r2, cmap=cmap, vmin=maplimits[0], vmax=maplimits[1])
     plt.setp(ax1.get_yticklabels(), visible = False)
     plt.ylabel('\n'.join(picks), rotation = 'horizontal', horizontalalignment='right', verticalalignment='center', fontsize=fontsize)
     #plt.ylabel("abc\ndef", rotation = 'horizontal', horizontalalignment='right', verticalalignment='center')

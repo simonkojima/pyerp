@@ -2,6 +2,9 @@ import os
 import sys
 import re
 
+def get_swap_dict(d):
+    return {v: k for k, v in d.items()}
+
 def mkdir(dir):
     isExist = os.path.exists(dir)
     if not isExist:
