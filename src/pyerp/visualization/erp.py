@@ -18,7 +18,7 @@ def plot_butterfly(epochs, picks = None, figsize=[6.4, 4.8]):
         raise ValueError("select single channel.")
 
     fig = plt.figure(figsize=figsize)
-    for m in range(data.shape[1]):
+    for m in range(data.shape[0]):
         plt.plot(times, data[m,:], color = 'tab:gray')
     
     plt.plot(times, np.mean(data, axis=0), color = 'tab:orange')
