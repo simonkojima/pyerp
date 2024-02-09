@@ -9,7 +9,26 @@ def reconstruct_raw(raw):
     raw = mne.io.RawArray(raw.get_data(), mne.create_info(raw.ch_names, raw.info['sfreq']))
     return raw
 
-def concatenate_raws_vhdr(files, sos, eog_channels = ['vEOG, hEOG'], len_transition = 1.0, save = False, overwrite = False):
+def concatenate_raws(raws, sos, eog_channels = ['vEOG', 'hEOG'], len_transition = 0.5, save = False, overwrite = False):
+    from .signal import apply_sosfilter, round_edge
+    cat_raws = list()
+    for idx, raw in enumerate(raws):
+        for ch in eog_channels:
+            raw.set_channel_types({ch: 'eog'})
+        Fs = raw.info['sfreq']
+        raw.apply_function(apply_sosfilter, picks = 'all', n_jobs = -1, channel_wise = True, sos=sos, zero_phase = True)
+        raw.apply_function(round_edge, picks = 'all', n_jobs = -1, channel_wise = True, Fs = Fs, len_transition = len_transition)
+        
+        cat_raws.append(raw)
+
+    cat_raw = mne.concatenate_raws(cat_raws)
+
+    if save is not False:
+        cat_raw.save(save, overwrite = overwrite)    
+    
+    return cat_raw
+
+def concatenate_raws_vhdr(files, sos, eog_channels = ['vEOG', 'hEOG'], len_transition = 1.0, save = False, overwrite = False):
     from .signal import apply_sosfilter, round_edge
     raws = list()
     for idx, file in enumerate(files):
@@ -37,11 +56,17 @@ def split_raw_to_trial(raw, marker_new_trial):
     """
 
     events, event_id = mne.events_from_annotations(raw)
+    
 
+    count = 0
     t_interval = list()
     for m in range(events.shape[0]):
         if events[m,2] in marker_new_trial:
             t_interval.append(events[m,0])
+            count += 1
+
+    if count == 1:
+        return [raw]
 
     sfreq = raw.info['sfreq']
     for idx, N in enumerate(t_interval):

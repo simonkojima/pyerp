@@ -116,6 +116,73 @@ def _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code
     return epochs, last_used_event_id
 
 
+def export_epoch_from_raws(raws,
+                          marker,
+                          eog_channels = None,
+                          filter = None,
+                          zero_phase = True,
+                          resample = None,
+                          tmin = -0.2,
+                          tmax = 0.5,
+                          baseline = (None, 0),
+                          subject_code = 'sub01',
+                          split_trial = False,
+                          apply_function = None,
+                          ica = None,
+                          **kwargs):
+    new_id_init = 2**16 # maximum id : 2147483647
+    #if ica_enable and ica_dir is None:
+    #    ica_dir = data_dir
+
+    epochs = list()
+    for idx, raw_list in enumerate(raws):
+        task = raw_list[1]
+        run = idx + 1
+        #raw = mne.io.read_raw(os.path.join(data_dir, fname), preload=True)
+        raw = raw_list[0].copy()
+        
+        if eog_channels is not None:
+            for ch in eog_channels:
+                raw.set_channel_types({ch: 'eog'})
+
+        #if ica_enable:
+        #    ica = mne.preprocessing.read_ica(os.path.join(ica_dir, file[0] + "-%s-ica.fif"%ica_type))
+        #    ica.apply(raw)
+        if ica is not None:
+            ica.apply(raw)
+            
+        if apply_function is not None:
+            raw = apply_function(raw=raw, **kwargs)
+
+        if filter is not None:
+            if filter[0] == 'mne':
+                raw.filter(filter[2][0], filter[2][1], phase=filter[1])
+            elif filter[0] == 'sos':
+                from .signal import apply_sosfilter
+                raw.apply_function(apply_sosfilter, sos = filter[1], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
+            elif filter[0] == 'ba':
+                from .signal import apply_filter
+                raw.apply_function(apply_filter, b = filter[1]['b'], a = filter[1]['a'], zero_phase = zero_phase, channel_wise = True, n_jobs = -1)
+
+        if split_trial:
+            marker_new_trial = get_event_id_by_type(marker, 'new-trial')
+            raw_intervals = split_raw_to_trial(raw, marker_new_trial)
+
+            marker_target = get_event_id_by_type(marker, 'target')
+            for idx_trial, raw_interval in enumerate(raw_intervals):
+                _epochs, last_used_event_id = _epoch_from_raw(raw_interval, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, idx_trial+1)
+                new_id_init = last_used_event_id
+                epochs.append(_epochs)
+        else:
+            _epochs, last_used_event_id = _epoch_from_raw(raw, marker, new_id_init, tmin, tmax, baseline, subject_code, task, run, None)
+            new_id_init = last_used_event_id
+            epochs.append(_epochs)
+    epochs = mne.concatenate_epochs(epochs, add_offset=True) 
+    if resample is not None:
+        epochs.resample(sfreq=resample, n_jobs = -1)
+    return epochs
+
+
 def export_epoch(data_dir,
                 eeg_files,
                 marker,
