@@ -89,7 +89,7 @@ class EpochsVectorizer():
         tmin = X.times[0]
         tmax = X.times[-1]
         
-        data = X.get_data()
+        data = X.get_data(copy = True)
         
         if np.min(np.array(self.ivals).flatten()) < tmin:
             raise ValueError("minimum time value of ivals belows tmin of epochs.")
