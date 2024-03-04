@@ -95,7 +95,26 @@ def plot_evo_2ch_tnt(target, nontarget, picks = ['Cz', 'F3'], vlim = None, figsi
 
     return fig
 
-def plot_2ch_squared_r(target, nontarget, channels, r2, times, fs, baseline = None, mesh = None, N = None, vlim = None, xticks = None, cmap = 'seismic', maplimits = None, figsize = [6.4, 4.8], linewidth = 2, fontsize=12, fontsize_legend = 12, legend_loc = 'best', sns = True):
+def plot_2ch_squared_r(target,
+                       nontarget,
+                       channels,
+                       r2,
+                       times,
+                       fs,
+                       baseline = None,
+                       mesh = None,
+                       N = None,
+                       vlim = None,
+                       xlim = None,
+                       xticks = None,
+                       cmap = 'seismic',
+                       maplimits = None,
+                       figsize = [6.4, 4.8],
+                       linewidth = 2,
+                       fontsize=12,
+                       fontsize_legend = 12,
+                       legend_loc = 'best',
+                       sns = True):
     """
     Parameters
     ==========
@@ -209,6 +228,10 @@ def plot_2ch_squared_r(target, nontarget, channels, r2, times, fs, baseline = No
     plt.ylabel('\n'.join(channels), rotation = 'horizontal', horizontalalignment='right', verticalalignment='center', fontsize=fontsize)
     #plt.ylabel("abc\ndef", rotation = 'horizontal', horizontalalignment='right', verticalalignment='center')
     plt.xlabel("Time (s)", fontsize=fontsize)
+    
+    if xlim is not None:
+        plt.xlim(xlim)
+
     if xticks is not None:
         ax1.set_xticks(xticks)
     plt.tick_params(labelsize=fontsize)
