@@ -257,6 +257,71 @@ def export_epoch(data_dir,
         epochs.resample(sfreq=resample, n_jobs = -1)
     return epochs
 
+def peak_latency(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', units = None, seed=None):
+    """
+    returns peak amplitude with boot strapping.
+
+    Parameters
+    ==========
+    epochs : array-like, shape of (n_epochs, n_ch, n_samples)
+        epoch data.
+    r : int, default = 0.8
+        ratio of randomly chosen data samples. if set to 0.8, 80% of data will be taken.
+    N : int, default = 10
+        number of repetitions of bootstrap.
+    mode : str ('pos' or 'neg'), default = 'pos'
+        if set to 'pos', positive peak will be computed. 'neg' will be negative.
+
+    References
+    ==========
+    Musso et al., Aphasia recovery by language training using a brain–computer interface: a proof-of-concept study, (2022)
+    """
+    from tqdm import tqdm
+    
+    time = epochs.times
+
+    X = epochs.get_data(units = units, copy = True)
+    n_epochs, n_ch, n_samples = X.shape
+    
+    ch_names = epochs.ch_names
+
+    n_epochs_bootstrap = int(n_epochs*r)
+
+    rng = np.random.default_rng(seed=seed)
+
+    if mode == 'pos':
+        func = np.max
+        func_arg = np.argmax
+    elif mode == 'neg':
+        func = np.min
+        func_arg = np.argmin
+
+    amp = list()
+    channels = list()
+    latency = list()
+    idx = np.arange(n_epochs)
+    for reps in tqdm(range(N)):
+
+        idx_epochs_shuffled = idx.copy()
+        rng.shuffle(idx_epochs_shuffled)
+        idx_epochs_shuffled = idx_epochs_shuffled[0:n_epochs_bootstrap]
+
+        X_bootstrap = X[idx_epochs_shuffled,:,:]
+        averaged = np.mean(X_bootstrap, axis = 0)
+        amp.append(func(averaged))
+        
+        I = func_arg(func(averaged, axis = 0))
+        latency.append(time[I])
+        
+
+        I = func_arg(func(averaged, axis = 1))
+        channels.append(ch_names[I])
+    
+    amp = np.array(amp)
+    latency = np.array(latency)
+
+    return amp, latency, channels
+
 def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', units = None, seed=None):
     """
     returns peak amplitude with boot strapping.
@@ -318,9 +383,9 @@ def peak(epochs, r = 0.8, N = 10, mode = 'pos', ch = 'all', units = None, seed=N
 
     return amp, channels
 
-def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=None, tmax='auto', alternative='two-sided', p_th=None):
+def onset(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=None, tmax='auto', alternative='two-sided', p_th=None):
     """
-    returns latency with boot strapping.
+    returns onset obtained with boot strapping procedure.
 
     Parameters
     ==========
@@ -395,7 +460,7 @@ def latency(T, nT, r = 0.8, N = 10, mode = 'pos', ch = 'all', seed=None, tmin=No
     n_epochs = dict()
     n_epochs_bootstrap = dict()
     for stim in ['target','non-target']:
-        X[stim] = epochs[stim].get_data()
+        X[stim] = epochs[stim].get_data(copy = True)
         n_epochs[stim] = X[stim].shape[0]
         n_epochs_bootstrap[stim] = int(n_epochs[stim]*r)
 
